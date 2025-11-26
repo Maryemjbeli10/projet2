@@ -2,12 +2,14 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 import requests
+from django.contrib.auth import get_user_model
 import os
 from django.conf import settings
 from users.forms import OrdonnanceForm
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 import pdfkit
+from django.http import JsonResponse
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
@@ -543,6 +545,9 @@ def ordonnance_pdf_view(request, ordonnance_id):
     response['Content-Disposition'] = f'attachment; filename="ordonnance_{ordonnance.id}.pdf"'
     return response
 
+
+
+
 def patient_ordonnances_page(request):
     # 🔍 Prend le premier patient trouvé (test uniquement)
     patient = Patient.objects.first()
@@ -553,8 +558,6 @@ def patient_ordonnances_page(request):
     ordonnances = Ordonnance.objects.filter(patient=patient).order_by('-date_created')
 
     return render(request, 'patient_ordonnances.html', {'ordonnances': ordonnances})
-
-
 
 def patient_ordonnance_pdf_view(request, ordonnance_id):
     print("🔍 ordonnance_id reçu :", ordonnance_id)
@@ -600,3 +603,78 @@ def generate_pdf(request, id):
     }
 
     return render(request, "ordonnance_pdf.html", context)
+def edit_doctor_inline(request, doctor_id):
+    if request.session.get("role") != "admin":
+        messages.error(request, "Accès refusé.")
+        return redirect("login")
+
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    user = doctor.user
+
+    if request.method == "POST":
+        # Mise à jour User
+        user.username = request.POST.get("username")
+        user.email = request.POST.get("email")
+        user.save()
+
+        # Mise à jour Doctor
+        doctor.full_name = request.POST.get("full_name")
+        doctor.specialization = request.POST.get("specialization")
+        doctor.phone = request.POST.get("phone")
+        doctor.address = request.POST.get("address")
+        doctor.experience_years = request.POST.get("experience_years")
+        doctor.description = request.POST.get("description")
+        doctor.save()
+
+        messages.success(request, "Docteur modifié avec succès ✅")
+        return redirect("list_doctors")
+
+    return render(request, "admin_doctors_list.html", {"doctors": Doctor.objects.all()})
+
+def delete_doctor_inline(request, doctor_id):
+    if request.session.get("role") != "admin":
+        messages.error(request, "Accès refusé.")
+        return redirect("login")
+
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    user = doctor.user
+    user.delete()  # cascade → doctor supprimé
+    messages.success(request, "Docteur supprimé avec succès ✅")
+    return redirect("list_doctors")
+
+def edit_patient_inline(request, patient_id):
+    if request.session.get("role") != "admin":
+        messages.error(request, "Accès refusé.")
+        return redirect("login")
+
+    patient = get_object_or_404(Patient, id=patient_id)
+    user = patient.user
+
+    if request.method == "POST":
+        user.username = request.POST.get("username")
+        user.email = request.POST.get("email")
+        user.save()
+
+        patient.full_name = request.POST.get("full_name")
+        patient.age = request.POST.get("age")
+        patient.phone = request.POST.get("phone")
+        patient.address = request.POST.get("address")
+        patient.save()
+
+        messages.success(request, "Patient modifié avec succès ✅")
+        return redirect("list_patients")
+
+    return render(request, "admin_patients_list.html", {"patients": Patient.objects.all()})
+
+
+
+def delete_patient_inline(request, patient_id):
+    if request.session.get("role") != "admin":
+        messages.error(request, "Accès refusé.")
+        return redirect("login")
+
+    patient = get_object_or_404(Patient, id=patient_id)
+    user = patient.user
+    user.delete()  # cascade
+    messages.success(request, "Patient supprimé avec succès ✅")
+    return redirect("list_patients")

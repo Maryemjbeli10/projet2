@@ -13,7 +13,8 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
 class ProtectedView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
