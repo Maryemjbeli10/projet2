@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Historique{% endblock %}
+{% block header %}Historique complet{% endblock %}
+
+{% block sidebar %}
+<a href="{% url 'patient_dashboard' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+    <i class="fa-solid fa-gauge-high w-5 h-5"></i>
+    <span>Tableau de bord</span>
+</a>
+<a href="{% url 'patient_history' %}" class="flex items-center space-x-3 p-3 rounded-lg text-white bg-emerald-600 font-semibold shadow-md transition duration-150 ease-in-out">
+        <i class="fa-solid fa-clock w-5 h-5"></i>
+        <span>Historique</span>
+</a>
+<a href="{% url 'patient_ordonnances' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+    <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
+    <span>Mes Prescriptions</span>
+</a>
+
+<!--<a href="#doctors-list" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+    <i class="fa-solid fa-user-doctor w-5 h-5"></i>
+    <span>Docteurs</span>-->
+</a>
+<a href="{% url 'profile_info' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+    <i class="fa-solid fa-user-gear w-5 h-5"></i>
+    <span>Mon Profil</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- BOÎTE BLANCHE (comme ta maquette) -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <!-- TITRE SECTION à l'intérieur de la boîte -->
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">Historique complet</h3>
+
+        <div id="history-list" class="space-y-3">
+            <!-- rempli via JS -->
+        </div>
+    </div>
+</div>
+
+<script>
+const token = "{{ access_token }}";
+const apiUrl = "/api/users/patient/history/";
+
+async function loadHistory() {
+    const res = await fetch(apiUrl, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    const container = document.getElementById('history-list');
+    if (!data.length) {
+        container.innerHTML = '<p class="text-gray-500 text-center">Aucun rendez-vous terminé.</p>';
+        return;
+    }
+
+    container.innerHTML = data.map(r => `
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:bg-gray-100 transition duration-150">
+            <div>
+                <div class="font-semibold text-gray-800">${r.doctor_name} - <span class="text-gray-500">${r.speciality}</span></div>
+                <div class="text-gray-600 mt-1">${r.date} à ${r.time.slice(0,5)}</div>
+            </div>
+            <span class="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-medium">Terminé</span>
+        </div>
+    `).join('');
+}
+loadHistory();
+</script>
+{% endblock %}

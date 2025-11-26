@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Ordonnances{% endblock %}
+
+{% block sidebar %}
+<a href="{% url 'patient_dashboard' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+    <i class="fa-solid fa-gauge-high w-5 h-5"></i>
+    <span>Tableau de bord</span>
+</a>
+<a href="{% url 'patient_history' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        <i class="fa-solid fa-clock w-5 h-5"></i>
+        <span>Historique</span>
+</a>
+<a href="{% url 'patient_ordonnances' %}" class="flex items-center space-x-3 p-3 rounded-lg text-white bg-emerald-600 font-semibold shadow-md transition">
+    <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
+    <span>Mes Prescriptions</span>
+</a>
+<!--<a href="#doctors-list" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+    <i class="fa-solid fa-user-doctor w-5 h-5"></i>
+    <span>Docteurs</span>
+</a>-->
+<a href="{% url 'profile_info' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+    <i class="fa-solid fa-user-gear w-5 h-5"></i>
+    <span>Mon Profil</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-extrabold text-gray-800 mb-8 flex items-center">
+        <i class="fa-solid fa-file-medical text-emerald-500 mr-3"></i>
+        Mes Ordonnances
+    </h1>
+
+    {% if ordonnances %}
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {% for ord in ordonnances %}
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-sm font-semibold text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full">
+                        #{{ ord.id }}
+                    </span>
+                    <span class="text-xs text-gray-500">{{ ord.date_created|date:"d/m/Y" }}</span>
+                </div>
+
+                <h3 class="text-lg font-bold text-gray-900 mb-1">{{ ord.doctor.full_name }}</h3>
+                <p class="text-sm text-gray-600 mb-4">{{ ord.doctor.specialization|default:"" }}</p>
+
+                <div class="space-y-2 text-sm text-gray-700">
+                    <p><strong>Diagnostic :</strong> {{ ord.diagnostic|truncatewords:10|default:"-" }}</p>
+                    <p><strong>Prescription :</strong> {{ ord.prescription|truncatewords:10|default:"-" }}</p>
+                    <p><strong>Notes :</strong> {{ ord.notes|truncatewords:8|default:"-" }}</p>
+                    <p><strong>Priorité :</strong>
+                        <span class="ml-2 px-2 py-1 text-xs rounded-full
+                            {% if ord.priority == 'Urgent' %}bg-red-100 text-red-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ ord.priority|default:"Normal" }}
+                        </span>
+                    </p>
+                </div>
+
+                <div class="mt-4 flex items-center justify-between">
+                    <a href="{% url 'patient_ordonnance_pdf' ord.id %}"
+                       class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">
+                        <i class="fa-solid fa-download mr-2"></i> Télécharger PDF
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-12">
+            <i class="fa-solid fa-prescription-bottle-medical text-5xl text-gray-300 mb-4"></i>
+            <h2 class="text-xl font-semibold text-gray-700">Aucune ordonnance disponible</h2>
+            <p class="text-gray-500 mt-2">Vos ordonnances apparaîtront ici après consultation.</p>
+        </div>
+    {% endif %}
+
+    <div class="mt-10 text-center">
+        <a href="{% url 'patient_dashboard' %}"
+           class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Retour au tableau de bord
+        </a>
+    </div>
+</div>
+{% endblock %}

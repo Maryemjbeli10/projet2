@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Patient{% endblock %}
+{% block header %}Tableau de bord Patient{% endblock %}
+
+{% block messages %}
+{% if messages %}
+    <div class="fixed top-4 right-4 z-50">
+        {% for message in messages %}
+            <div class="bg-{{ message.tags }} text-white px-6 py-3 rounded-lg shadow-lg mb-2 animate-fade-in">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+<a href="{% url 'patient_dashboard' %}" class="flex items-center space-x-3 p-3 rounded-lg text-white bg-emerald-600 font-semibold shadow-md transition duration-150 ease-in-out">
+    <i class="fa-solid fa-gauge-high w-5 h-5"></i>
+    <span>Tableau de bord</span>
+</a>
+<a href="{% url 'patient_history' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        <i class="fa-solid fa-clock w-5 h-5"></i>
+        <span>Historique</span>
+</a>
+<a href="{% url 'patient_ordonnances' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+    <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
+    <span>Mes Prescriptions</span>
+</a>
+
+<!--<a href="#doctors-list" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+    <i class="fa-solid fa-user-doctor w-5 h-5"></i>
+    <span>Docteurs</span>
+</a>-->
+<a href="{% url 'profile_info' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+    <i class="fa-solid fa-user-gear w-5 h-5"></i>
+    <span>Mon Profil</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-full mx-auto">
+    <!-- Bienvenue -->
+    <h1 class="text-3xl font-extrabold text-gray-800 mb-2">
+        <i class="fa-solid fa-hand-wave text-emerald-500 mr-2"></i> Bienvenue, {{ username }} !
+    </h1>
+    <p class="text-lg text-gray-600 mb-10 border-b pb-4">
+        Vous êtes connecté en tant que <strong class="text-blue-600">Patient</strong>.
+    </p>
+
+    <!-- Cartes d'actions rapides -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <a href="#appointments-list" class="bg-white p-6 rounded-2xl shadow-xl border-l-4 border-blue-500 hover:shadow-2xl transition duration-300 ease-in-out flex flex-col items-center text-center">
+            <i class="fa-solid fa-calendar-check text-4xl text-blue-500 mb-3"></i>
+            <span class="font-bold text-gray-800">Mes Rendez-vous</span>
+            <span class="text-sm text-gray-500 mt-1">Voir l'historique et les prochains RDV</span>
+        </a>
+        <a href="#ordonnances-list" class="bg-white p-6 rounded-2xl shadow-xl border-l-4 border-emerald-500 hover:shadow-2xl transition duration-300 ease-in-out flex flex-col items-center text-center">
+            <i class="fa-solid fa-prescription-bottle-medical text-4xl text-emerald-500 mb-3"></i>
+            <span class="font-bold text-gray-800">Mes Prescriptions</span>
+            <span class="text-sm text-gray-500 mt-1">Accéder à mes ordonnances</span>
+        </a>
+        <a href="#doctors-list" class="bg-white p-6 rounded-2xl shadow-xl border-l-4 border-purple-500 hover:shadow-2xl transition duration-300 ease-in-out flex flex-col items-center text-center">
+            <i class="fa-solid fa-user-doctor text-4xl text-purple-500 mb-3"></i>
+            <span class="font-bold text-gray-800">Voir les Docteurs</span>
+            <span class="text-sm text-gray-500 mt-1">Trouver un spécialiste</span>
+        </a>
+        <a href="{% url 'logout' %}" class="bg-white p-6 rounded-2xl shadow-xl border-l-4 border-red-500 hover:shadow-2xl transition duration-300 ease-in-out flex flex-col items-center text-center">
+            <i class="fa-solid fa-right-from-bracket text-4xl text-red-500 mb-3"></i>
+            <span class="font-bold text-gray-800">Déconnexion</span>
+            <span class="text-sm text-gray-500 mt-1">Se déconnecter du système</span>
+        </a>
+    </div>
+    <!-- PROCHAINS RDV – design maquette -->
+    <div class="max-w-4xl mx-auto mb-8">
+        <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+            <i class="fa-solid fa-bell text-blue-500 mr-2"></i> Prochains rendez-vous
+        </h3>
+        <div id="next-appointments-list" class="space-y-4">
+            <!-- rempli par JS -->
+        </div>
+    </div>
+
+    <!-- Mes Rendez-vous -->
+    <div id="appointments-list" class="mt-12 bg-white p-8 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-extrabold text-gray-800 mb-6 border-b pb-3 flex items-center">
+            <i class="fa-solid fa-calendar-check text-blue-500 mr-3"></i> Mes Rendez-vous
+        </h2>
+        {% if appointments %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200 rounded-xl shadow-sm">
+                <thead class="bg-blue-50 text-gray-700">
+                    <tr>
+                        <th class="py-2 px-4 border-b text-left">Docteur</th>
+                        <th class="py-2 px-4 border-b text-left">Date</th>
+                        <th class="py-2 px-4 border-b text-left">Heure</th>
+                        <th class="py-2 px-4 border-b text-left">Motif</th>
+                        <th class="py-2 px-4 border-b text-left">Statut</th>
+                        <th class="py-2 px-4 border-b text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                        <tr class="hover:bg-gray-50" data-doctor-id="{{ appt.doctor }}">
+                            <td class="py-2 px-4 border-b">{{ appt.doctor_name }}</td>
+                            <td class="py-2 px-4 border-b">
+                                <span id="date-{{ appt.id }}">{{ appt.date }}</span>
+                                <input type="date" id="date-input-{{ appt.id }}" value="{{ appt.date }}" style="display:none;" class="form-input">
+                            </td>
+                            <td class="py-2 px-4 border-b">
+                                <span id="time-{{ appt.id }}">{{ appt.time }}</span>
+                                <input type="time" id="time-input-{{ appt.id }}" value="{{ appt.time }}" style="display:none;" class="form-input">
+                            </td>
+                            <td class="py-2 px-4 border-b">
+                                <span id="reason-{{ appt.id }}">{{ appt.reason }}</span>
+                                <textarea id="reason-input-{{ appt.id }}" style="display:none;" class="form-input">{{ appt.reason }}</textarea>
+                            </td>
+                            <td class="py-2 px-4 border-b font-semibold">
+                                {% if appt.status == 'PENDING' %}
+                                    <span class="text-yellow-600">En attente</span>
+                                {% elif appt.status == 'CONFIRMED' %}
+                                    <span class="text-green-600">Confirmé</span>
+                                {% elif appt.status == 'CANCELLED' %}
+                                    <span class="text-red-600">Annulé</span>
+                                {% elif appt.status == 'COMPLETED' %}
+                                    <span class="text-gray-600">Terminé</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-2 px-4 border-b">
+                                {% if appt.status == 'PENDING' %}
+                                    <button onclick="toggleEdit({{ appt.id }})" class="text-indigo-600 hover:underline mr-2">Modifier</button>
+                                    <button id="save-btn-{{ appt.id }}" onclick="saveAppointment({{ appt.id }})" style="display:none;" class="text-green-600 hover:underline mr-2">Sauver</button>
+                                    <button type="button" class="text-red-600 hover:underline" onclick="deleteAppointment({{ appt.id }})">Supprimer</button>
+                                {% else %}
+                                    <span class="text-gray-500">Non modifiable</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-gray-500 text-center mt-4">Aucun rendez-vous trouvé.</p>
+        {% endif %}
+    </div>
+
+    
+
+    <!-- Docteurs -->
+    <div id="doctors-list" class="mt-12 bg-white p-8 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-extrabold text-gray-800 mb-6 border-b pb-3 flex items-center">
+            <i class="fa-solid fa-stethoscope text-purple-500 mr-3"></i> Docteurs disponibles
+        </h2>
+        {% if doctors %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for doctor in doctors %}
+                    <div class="doctor-card bg-gray-50 p-6 rounded-xl shadow-md border border-gray-200 flex flex-col hover:shadow-lg transition duration-300 ease-in-out">
+                        <div class="flex items-center mb-4 border-b pb-3">
+                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 font-bold text-xl mr-4 flex-shrink-0">
+                                <i class="fa-solid fa-user-doctor"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-xl text-gray-900">{{ doctor.full_name }}</p>
+                                <p class="text-sm text-purple-600 font-medium mt-0.5">{{ doctor.specialization }}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-700 mt-2 flex-grow">
+                            <p class="flex items-center"><i class="fa-solid fa-clock-rotate-left w-4 h-4 text-gray-400 mr-2"></i> <span class="font-semibold text-gray-500">Expérience:</span> {{ doctor.experience_years }} ans</p>
+                            <p class="flex items-center"><i class="fa-solid fa-phone w-4 h-4 text-gray-400 mr-2"></i> <span class="font-semibold text-gray-500">Contact:</span> {{ doctor.phone }}</p>
+                            <p class="flex items-center"><i class="fa-solid fa-location-dot w-4 h-4 text-gray-400 mr-2"></i> <span class="font-semibold text-gray-500">Adresse:</span> {{ doctor.address }}</p>
+                            <p class="mt-3 text-xs text-gray-600 italic border-t pt-3">
+                                <i class="fa-solid fa-info-circle w-3 h-3 text-gray-400 mr-1"></i>
+                                {{ doctor.description|default:"(Aucune description fournie)"|truncatechars:80 }}
+                            </p>
+                        </div>
+                        <a href="{% url 'book_appointment' doctor_id=doctor.id %}" class="mt-6 w-full text-center bg-indigo-600 text-white px-4 py-3 rounded-xl text-base font-semibold hover:bg-indigo-700 transition shadow-lg flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-calendar-plus"></i>
+                            <span>Prendre Rendez-vous</span>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-500 p-6 border border-dashed rounded-xl bg-gray-50 text-center shadow-inner">
+                <i class="fa-solid fa-circle-info mr-2 text-xl text-gray-400"></i>
+                <span class="font-bold">Avertissement :</span> Aucun docteur n'est disponible pour le moment. Veuillez vérifier l'état du backend ou des données.
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+function toggleEdit(id) {
+    document.getElementById(`date-${id}`).style.display = 'none';
+    document.getElementById(`date-input-${id}`).style.display = 'inline';
+    document.getElementById(`time-${id}`).style.display = 'none';
+    document.getElementById(`time-input-${id}`).style.display = 'inline';
+    document.getElementById(`reason-${id}`).style.display = 'none';
+    document.getElementById(`reason-input-${id}`).style.display = 'inline';
+    document.querySelector(`button[onclick="toggleEdit(${id})"]`).style.display = 'none';
+    document.getElementById(`save-btn-${id}`).style.display = 'inline';
+}
+
+async function saveAppointment(id) {
+    const appointmentRow = document.querySelector(`tr:has(#date-${id})`);
+    const doctorId = appointmentRow.getAttribute('data-doctor-id');
+
+    const payload = {
+        doctor: parseInt(doctorId),
+        date: document.getElementById(`date-input-${id}`).value,
+        time: document.getElementById(`time-input-${id}`).value,
+        reason: document.getElementById(`reason-input-${id}`).value,
+    };
+
+    try {
+        const res = await fetch(`/api/users/appointments/${id}/update/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Authorization': 'Bearer {{ access_token }}'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert("Rendez-vous modifié avec succès ✅");
+            location.reload();
+        } else {
+            const errorData = await res.json();
+            alert(`Erreur : ${errorData.error || 'Erreur lors de la modification'}`);
+        }
+    } catch (error) {
+        alert("Erreur réseau lors de la modification");
+    }
+}
+
+async function deleteAppointment(id) {
+    if(!confirm("Supprimer ce rendez-vous ?")) return;
+    const res = await fetch(`/api/users/appointments/${id}/delete/`, {
+        method: "DELETE",
+        headers: {
+            "Authorization": "Bearer {{ access_token }}",
+        },
+    });
+    if(res.ok) {
+        alert("Rendez-vous supprimé ✅");
+        location.reload();
+    } else {
+        alert("Impossible de supprimer.");
+    }
+}
+</script>
+<script>
+const tokenNext = "{{ access_token }}";
+const apiNext = "/api/users/appointments/mine/";
+
+async function loadNextAppointments() {
+    const res = await fetch(apiNext, {
+        headers: { 'Authorization': `Bearer ${tokenNext}` }
+    });
+    const sections = await res.json(); // [{header, items:[{date,time,reason,doctor_name,speciality,icon}]}, ...]
+
+    const container = document.getElementById('next-appointments-list');
+    if (!sections.length) {
+        container.innerHTML = '<p class="text-gray-500 text-center">Aucun rendez-vous confirmé à venir.</p>';
+        return;
+    }
+
+    container.innerHTML = sections.map(sec => `
+        <div class="mb-6">
+            <div class="text-sm font-semibold text-gray-600 mb-3">${sec.header}</div>
+            ${sec.items.map(r => `
+                <div class="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4 mb-2 hover:shadow transition">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl text-blue-600">${r.icon}</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">${r.doctor_name}</div>
+                            <div class="text-sm text-gray-500">${r.speciality}</div>
+                            <div class="text-xs text-gray-400 mt-1">${r.reason}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-gray-600">${r.time.slice(0,5)}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+}
+loadNextAppointments();
+</script>
+
+{% endblock %}

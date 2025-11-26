@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ordonnance Médicale</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      body { margin: 0; }
+      .no-break { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+
+<body class="bg-white text-gray-800 text-sm">
+
+  <div class="max-w-3xl mx-auto p-6">
+
+    <!-- HEADER -->
+    <div class="flex items-center border-b pb-4 mb-6 no-break">
+      <img src="{{ logo_path }}" class="h-14 w-auto mr-3" alt="Logo">
+
+      <div class="flex flex-col">
+        <h1 class="text-2xl font-bold text-emerald-700 tracking-wide">Ordonnance Médicale</h1>
+        <p class="text-xs text-gray-500 mt-1">
+          Dr {{ ordonnance.doctor.full_name }} — {{ ordonnance.doctor.specialization }}
+        </p>
+      </div>
+
+      <div class="ml-auto text-right text-xs text-gray-500">
+        <p><strong>Date :</strong> {{ ordonnance.date_created|date:"d/m/Y" }}</p>
+      </div>
+    </div>
+
+    <!-- PATIENT INFO -->
+    <div class="bg-gray-50 border rounded-lg p-4 no-break">
+      <div class="flex justify-between">
+        <p>
+          <span class="text-gray-500 font-semibold">Patient :</span>
+          {{ ordonnance.patient.full_name }}
+        </p>
+
+        <p>
+          <span class="text-gray-500 font-semibold">Priorité :</span>
+          <span class="ml-1 px-2 py-0.5 rounded text-xs font-medium
+           {% if ordonnance.priority == 'Urgent' %}
+             bg-red-100 text-red-700
+           {% else %}
+             bg-emerald-100 text-emerald-700
+           {% endif %}
+           ">
+            {{ ordonnance.priority|default:"Normal" }}
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <!-- DIAGNOSTIC -->
+    <div class="mt-6 no-break">
+      <h2 class="text-gray-600 text-xs uppercase font-semibold tracking-wide">Diagnostic / Motif</h2>
+      <p class="mt-2 p-3 border rounded bg-white shadow-sm leading-relaxed">
+        {{ ordonnance.diagnostic|default:"-" }}
+      </p>
+    </div>
+
+    <!-- PRESCRIPTION (block stylé) -->
+    <div class="mt-6 no-break">
+      <h2 class="text-gray-600 text-xs uppercase font-semibold tracking-wide">Prescription</h2>
+      <div class="mt-2 p-4 bg-emerald-50 border-l-4 border-emerald-600 rounded shadow-sm leading-relaxed">
+        {{ ordonnance.prescription|default:"-" }}
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    {% if ordonnance.notes %}
+    <div class="mt-6 no-break">
+      <h2 class="text-gray-600 text-xs uppercase font-semibold tracking-wide">Notes / Instructions</h2>
+      <p class="mt-2 p-3 border rounded bg-white shadow-sm italic leading-relaxed whitespace-pre-line">
+        {{ ordonnance.notes }}
+      </p>
+    </div>
+    {% endif %}
+
+    <!-- SIGNATURE -->
+    <div class="mt-10 flex justify-between items-end no-break">
+
+      <div class="text-xs text-gray-500">
+        <p>Fait le {{ ordonnance.date_created|date:"d/m/Y" }}</p>
+        <p class="font-semibold text-gray-800">Dr {{ ordonnance.doctor.full_name }}</p>
+        <p>{{ ordonnance.doctor.specialization }}</p>
+      </div>
+
+      <!-- Cachet / Signature numérique -->
+      <div class="text-right">
+        {% if stamp_path %}
+        <img src="{{ stamp_path }}" class="h-20 opacity-90" alt="Cachet">
+        {% else %}
+        <p class="text-gray-400 italic">Signature du médecin</p>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="mt-10 text-center text-[10px] text-gray-400 border-t pt-3">
+      Conservez cette ordonnance précieusement.
+    </div>
+
+  </div>
+  <script>
+  window.onload = () => window.print();
+</script>
+
+</body>
+</html>

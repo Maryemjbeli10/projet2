@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Réserver un Rendez-vous</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="max-w-3xl mx-auto mt-12 bg-white p-8 rounded-2xl shadow-lg">
+        <a href="{% url 'patient_dashboard' %}" class="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">
+            &larr; Retour au Dashboard
+        </a>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-3">
+            Prendre Rendez-vous avec Dr. {{ doctor.full_name }}
+        </h1>
+        <p class="text-gray-600 mb-6">
+            **Spécialisation :** {{ doctor.specialization }}
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="bg-{{ message.tags }}-100 border border-{{ message.tags }}-400 text-{{ message.tags }}-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <strong class="font-bold">{{ message.tags|capfirst }} !</strong>
+                    <span class="block sm:inline">{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="{% url 'book_appointment' doctor_id=doctor.id %}" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label for="date" class="block text-sm font-medium text-gray-700">Date du Rendez-vous</label>
+                <input type="date" id="date" name="date" required
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+
+            <div>
+                <label for="time" class="block text-sm font-medium text-gray-700">Heure du Rendez-vous</label>
+                <input type="time" id="time" name="time" required
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+
+            <div>
+                <label for="reason" class="block text-sm font-medium text-gray-700">Raison de la Consultation</label>
+                <textarea id="reason" name="reason" rows="4" required
+                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          placeholder="Décrivez brièvement la raison de votre visite..."></textarea>
+            </div>
+
+            <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                Confirmer la Réservation
+            </button>
+        </form>
+    </div>
+</body>
+</html>
