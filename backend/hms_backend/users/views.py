@@ -5,7 +5,7 @@ from rest_framework import generics
 from rest_framework import status
 from web.views import API_BASE
 from .models import User, Doctor, Patient , Appointment, Ordonnance
-from .serializers import RegisterSerializer,PatientRegisterSerializer,AdminRegisterSerializer, DoctorRegisterSerializer, DoctorListSerializer, DoctorUpdateSerializer,PatientListSerializer, PatientUpdateSerializer,AppointmentSerializer, OrdonnanceSerializer
+from .serializers import DoctorOrdonnanceSerializer, RegisterSerializer,PatientRegisterSerializer,AdminRegisterSerializer, DoctorRegisterSerializer, DoctorListSerializer, DoctorUpdateSerializer,PatientListSerializer, PatientUpdateSerializer,AppointmentSerializer, OrdonnanceSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -534,3 +534,30 @@ class PatientOrdonnanceListView(generics.ListAPIView):
         print("Ordonnances récupérées:", list(ordonnances.values('id', 'prescription', 'doctor_id', 'date_created')))
 
         return ordonnances
+    
+
+class DoctorOrdonnanceListView(generics.ListAPIView):
+    serializer_class = DoctorOrdonnanceSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role != 'doctor':
+            return Ordonnance.objects.none()
+
+        qs = Ordonnance.objects.filter(
+            doctor=user.doctor_profile
+        ).select_related('patient').order_by('-date_created')
+
+        search   = self.request.GET.get('search', '').strip()
+        priority = self.request.GET.get('priority', '')
+
+        # 1. filtre nom (ET seulement si on a tapé qqch)
+        if search:
+            qs = qs.filter(patient__full_name__icontains=search)
+
+        # 2. filtre priorité (ET seulement si choisi)
+        if priority in ('Normal', 'Urgent'):
+            qs = qs.filter(priority=priority)
+
+        return qs

@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    AppointmentCreateView, AppointmentDetailView, AppointmentStatusUpdateView, DoctorAppointmentListView, MyDoctorAppointmentsView, PatientAppointmentDeleteView, PatientAppointmentListView, PatientAppointmentUpdateView, ProfileView, ProtectedView, RegisterView, PatientRegisterView, AdminRegisterView,
+    AppointmentCreateView, AppointmentDetailView, AppointmentStatusUpdateView, DoctorAppointmentListView, DoctorOrdonnanceListView, MyDoctorAppointmentsView, PatientAppointmentDeleteView, PatientAppointmentListView, PatientAppointmentUpdateView, ProfileView, ProtectedView, RegisterView, PatientRegisterView, AdminRegisterView,
     DoctorRegisterView, DoctorListView, DoctorUpdateView, DoctorDeleteView,
     PatientListView, PatientUpdateView, PatientDeleteView,  PatientOrdonnanceListView,admin_confirmed_appointments, doctor_appointments_with_patients, doctor_finished_patients, doctor_weekly_schedule, edit_appointment_view, patient_confirmed_appointments, patient_history
 )
@@ -43,5 +43,5 @@ urlpatterns = [
     path('doctor/weekly-schedule/', doctor_weekly_schedule, name='api_doctor_weekly_schedule'),
     path('patient/history/', patient_history, name='api_patient_history'),
     path('appointments/mine/', patient_confirmed_appointments, name='patient_confirmed_appointments'),
-
+    path('doctor/ordonnances/', DoctorOrdonnanceListView.as_view(), name='doctor_ordonnances'),
 ]

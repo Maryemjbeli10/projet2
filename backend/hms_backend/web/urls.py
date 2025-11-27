@@ -36,4 +36,6 @@ urlpatterns = [
     path('doctor/finished-patients/', views.doctor_finished_patients_view, name='doctor_finished_patients'),
     path('doctor/weekly-schedule/', views.doctor_weekly_schedule_view, name='doctor_weekly_schedule'),
     path('patient/history/', views.patient_history_view, name='patient_history'),
+    path('doctor/ordonnances/', views.doctor_ordonnances_view, name='doctor_ordonnances'),
+
 ]

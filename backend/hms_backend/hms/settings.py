@@ -89,7 +89,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'HospitalManagment',       # le nom de ta base PostgreSQL
         'USER': 'postgres',          # l'utilisateur par défaut de PostgreSQL
-        'PASSWORD': 'admin',  # ton mot de passe PostgreSQL
+        'PASSWORD': 'siwar123',  # ton mot de passe PostgreSQL
         'HOST': 'localhost',         # ou l’adresse du serveur PostgreSQL
             
     }
@@ -155,3 +155,5 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'users.User'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
+
+

@@ -549,11 +549,17 @@ def ordonnance_pdf_view(request, ordonnance_id):
 
 
 def patient_ordonnances_page(request):
-    # 🔍 Prend le premier patient trouvé (test uniquement)
-    patient = Patient.objects.first()
+    username = request.session.get("username")
+    if not username:
+        messages.error(request, "Veuillez vous connecter.")
+        return redirect("login")
 
-    if not patient:
-        return HttpResponse("Aucun patient trouvé dans la base.")
+    try:
+        user = User.objects.get(username=username)
+        patient = Patient.objects.get(user=user)
+    except (User.DoesNotExist, Patient.DoesNotExist):
+        messages.error(request, "Profil patient introuvable.")
+        return redirect("login")
 
     ordonnances = Ordonnance.objects.filter(patient=patient).order_by('-date_created')
 
@@ -678,3 +684,35 @@ def delete_patient_inline(request, patient_id):
     user.delete()  # cascade
     messages.success(request, "Patient supprimé avec succès ✅")
     return redirect("list_patients")
+
+
+def doctor_ordonnances_view(request):
+    role = request.session.get("role")
+    access_token = request.session.get("access_token")
+
+    if role != "doctor" or not access_token:
+        messages.error(request, "Accès refusé.")
+        return redirect("login")
+
+    doctor = Doctor.objects.get(user__username=request.session["username"])
+
+    # --- filtres ---
+    search   = request.GET.get("search", "").strip()          # nom patient
+    status_f = request.GET.get("status",  "")                # '' | 'Normal' | 'Urgent'
+
+    qs = Ordonnance.objects.filter(doctor=doctor).select_related("patient").order_by("-date_created")
+
+    if search:                       # filtre 1 : nom
+        qs = qs.filter(patient__full_name__icontains=search)
+
+    if status_f in ("Normal", "Urgent"):   # filtre 2 : priorité
+        qs = qs.filter(priority=status_f)
+
+    # liste déroulante : patients déjà présents dans les ordonnances du docteur
+    patients = (Patient.objects
+                       .filter(ordonnances__doctor=doctor)
+                       .distinct()
+                       .order_by("full_name"))
+
+    return render(request, "doctor_ordonnances_list.html",
+                  {"ordonnances": qs, "patients": patients})

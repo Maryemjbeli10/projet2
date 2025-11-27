@@ -27,7 +27,11 @@
         <i class="fa-solid fa-calendar-check w-5 h-5"></i>
         <span>Créer Ordonnance
         </span>
-        </a>
+    </a>
+    <a href="{% url 'doctor_ordonnances' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
+        <span>Mes Ordonnances</span>
+    </a>
     <a href="{% url 'profile_info' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
         <i class="fa-solid fa-user-gear w-5 h-5"></i>
         <span>Mon Profil</span>

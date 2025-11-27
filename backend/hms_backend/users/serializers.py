@@ -282,3 +282,24 @@ class OrdonnanceSerializer(serializers.ModelSerializer):
             'notes',
             'priority'
         ]
+
+
+class PatientMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ('full_name', 'age', 'phone')
+
+class DoctorOrdonnanceSerializer(serializers.ModelSerializer):
+    patient = PatientMiniSerializer(read_only=True)
+
+    class Meta:
+        model = Ordonnance
+        fields = [
+            'id',
+            'patient',
+            'date_created',
+            'prescription',
+            'diagnostic',
+            'notes',
+            'priority'
+        ]        

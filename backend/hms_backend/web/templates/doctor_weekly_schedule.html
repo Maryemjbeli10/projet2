@@ -19,7 +19,11 @@
         <i class="fa-solid fa-calendar-check w-5 h-5"></i>
         <span>Créer Ordonnance
         </span>
-        </a>
+    </a>
+    <a href="{% url 'doctor_ordonnances' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
+        <span>Mes Ordonnances</span>
+    </a>
     <a href="{% url 'profile_info' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
         <i class="fa-solid fa-user-gear w-5 h-5"></i>
         <span>Mon Profil</span>
@@ -28,50 +32,64 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Planning de la semaine</h2>
+  <h2 class="text-2xl font-bold text-gray-800 mb-6">Planning de la semaine</h2>
 
-    <!-- liste verticale -->
-    <div id="schedule-container" class="space-y-6">
-        <!-- rempli via JS -->
-    </div>
+  <!-- liste verticale -->
+  <div id="schedule-container" class="space-y-6">
+    <!-- rempli via JS -->
+  </div>
 </div>
 
 <script>
-const token = "{{ access_token }}";
-const apiUrl = "/api/users/doctor/weekly-schedule/";
+const token   = "{{ access_token }}";
+const apiUrl  = "/api/users/doctor/weekly-schedule/";
+
+const dayFr = {
+  'Monday'   : 'Lundi',
+  'Tuesday'  : 'Mardi',
+  'Wednesday': 'Mercredi',
+  'Thursday' : 'Jeudi',
+  'Friday'   : 'Vendredi',
+  'Saturday' : 'Samedi',
+  'Sunday'   : 'Dimanche'
+};
 
 async function loadSchedule() {
-    const res = await fetch(apiUrl, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json(); // {Lundi: [...], Mardi: [...], ...}
-    const container = document.getElementById('schedule-container');
+  const res   = await fetch(apiUrl, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data  = await res.json();   // {Monday:[…], Tuesday:[…], …}
 
-    let html = '';
-    for (const [day, rdvs] of Object.entries(data)) {
-        html += `
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
-            <div class="flex items-center gap-4 mb-3">
-                <i class="fa-solid fa-calendar-day text-emerald-500 text-2xl"></i>
-                <h3 class="text-xl font-semibold text-gray-800">${day}</h3>
-            </div>
+  const container = document.getElementById('schedule-container');
+  let html = '';
 
-            ${rdvs.length ? `
-                <ul class="space-y-2">
-                    ${rdvs.map(r => `
-                        <li class="bg-blue-50 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                            <span class="flex items-center gap-1">
-                                <i class="fa-solid fa-clock text-xs"></i>${r.time.slice(0,5)}
-                            </span>
-                            <span class="mx-1">-</span>
-                            <span class="font-semibold truncate">${r.patient__full_name}</span>
-                        </li>`).join('')}
-                </ul>` :
-                `<p class="text-gray-400 text-sm">Aucun RDV</p>`}
-        </div>`;
-    }
-    container.innerHTML = html;
+  for (const [dayEn, rdvs] of Object.entries(data)) {
+    const day = dayFr[dayEn] || dayEn;
+
+    html += `
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
+      <div class="flex items-center gap-4 mb-3">
+        <i class="fa-solid fa-calendar-day text-emerald-500 text-2xl"></i>
+        <h3 class="text-xl font-semibold text-gray-800">${day}</h3>
+      </div>
+
+      ${rdvs.length
+        ? `<ul class="space-y-2">
+             ${rdvs.map(r => `
+               <li class="bg-blue-50 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                 <span class="flex items-center gap-1">
+                   <i class="fa-solid fa-clock text-xs"></i>${r.time.slice(0,5)}
+                 </span>
+                 <span class="mx-1">-</span>
+                 <span class="font-semibold truncate">${r.patient__full_name}</span>
+               </li>`).join('')}
+           </ul>`
+        : `<p class="text-gray-400 text-sm">Aucun RDV</p>`}
+    </div>`;
+  }
+  container.innerHTML = html;
 }
+
 loadSchedule();
 </script>
 {% endblock %}
