@@ -37,5 +37,5 @@ urlpatterns = [
     path('doctor/weekly-schedule/', views.doctor_weekly_schedule_view, name='doctor_weekly_schedule'),
     path('patient/history/', views.patient_history_view, name='patient_history'),
     path('doctor/ordonnances/', views.doctor_ordonnances_view, name='doctor_ordonnances'),
-
+    path('doctor/patient/<int:patient_id>/dossier/', views.doctor_patient_dossier_view, name='doctor_patient_dossier'),
 ]

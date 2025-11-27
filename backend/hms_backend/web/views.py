@@ -716,3 +716,20 @@ def doctor_ordonnances_view(request):
 
     return render(request, "doctor_ordonnances_list.html",
                   {"ordonnances": qs, "patients": patients})
+
+
+def doctor_patient_dossier_view(request, patient_id):
+    role = request.session.get("role")
+    access_token = request.session.get("access_token")
+
+    if role != "doctor" or not access_token:
+        messages.error(request, "Accès refusé.")
+        return redirect("login")
+
+    patient = get_object_or_404(Patient, id=patient_id)
+    ordonnances = Ordonnance.objects.filter(patient=patient).order_by('-date_created')
+
+    return render(request, "doctor_patient_dossier.html", {
+        "patient": patient,
+        "ordonnances": ordonnances,
+    })
