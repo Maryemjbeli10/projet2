@@ -469,8 +469,13 @@ def create_ordonnance_view(request):
         messages.error(request, "Vous devez être un docteur.")
         return redirect("doctor_dashboard")
 
-    # Liste des patients
-    patients = Patient.objects.all()
+    octor = Doctor.objects.get(user=user)
+
+    # ✅ Uniquement les patients ayant au moins un RDV COMPLETED avec ce docteur
+    patients = Patient.objects.filter(
+        patient_appointments__doctor=doctor,
+        patient_appointments__status='COMPLETED'
+    ).distinct()
 
     if request.method == "POST":
         patient_id = request.POST.get("patient")
@@ -561,9 +566,48 @@ def patient_ordonnances_page(request):
         messages.error(request, "Profil patient introuvable.")
         return redirect("login")
 
-    ordonnances = Ordonnance.objects.filter(patient=patient).order_by('-date_created')
+    # ✅ Récupérer les docteurs ayant prescrit des ordonnances à ce patient
+    doctors = Doctor.objects.filter(
+        ordonnances__patient=patient
+    ).distinct().order_by("full_name")
 
-    return render(request, 'patient_ordonnances.html', {'ordonnances': ordonnances})
+    # ✅ Récupérer les spécialisations uniques
+    specializations = Doctor.objects.filter(
+        ordonnances__patient=patient
+    ).values_list("specialization", flat=True).distinct().order_by("specialization")
+
+    # ✅ Récupérer les dates de RDV terminés
+    from django.db.models import DateField
+    from django.db.models.functions import Cast
+
+    # ✅ Dates des ordonnances du patient
+    ordonnance_dates = Ordonnance.objects.filter(
+        patient=patient
+    ).dates('date_created', 'day', order='DESC')
+
+    # ✅ Filtres
+    doctor_id = request.GET.get("doctor")
+    specialization = request.GET.get("specialization")
+    date_ord = request.GET.get("date_ord")
+
+    qs = Ordonnance.objects.filter(patient=patient).order_by('-date_created')
+
+    if doctor_id:
+        qs = qs.filter(doctor_id=doctor_id)
+    if specialization:
+        qs = qs.filter(doctor__specialization=specialization)
+    if date_ord:
+        qs = qs.filter(date_created__date=date_ord)
+
+    return render(request, 'patient_ordonnances.html', {
+        'ordonnances': qs,
+        'doctors': doctors,
+        'specializations': specializations,
+        'ordonnance_dates': ordonnance_dates,  # ✅ ici
+        'doctor_id': doctor_id,
+        'specialization_selected': specialization,
+        'date_ord': date_ord,  # ✅ et ici
+    })
 
 def patient_ordonnance_pdf_view(request, ordonnance_id):
     print("🔍 ordonnance_id reçu :", ordonnance_id)
@@ -700,7 +744,14 @@ def doctor_ordonnances_view(request):
     search   = request.GET.get("search", "").strip()          # nom patient
     status_f = request.GET.get("status",  "")                # '' | 'Normal' | 'Urgent'
 
-    qs = Ordonnance.objects.filter(doctor=doctor).select_related("patient").order_by("-date_created")
+    # ✅ Uniquement les ordonnances de patients ayant au moins un RDV COMPLETED avec ce docteur
+    qs = Ordonnance.objects.filter(
+        doctor=doctor,
+        patient__in=Patient.objects.filter(
+            patient_appointments__doctor=doctor,
+            patient_appointments__status='COMPLETED'
+        ).distinct()
+    )
 
     if search:                       # filtre 1 : nom
         qs = qs.filter(patient__full_name__icontains=search)
@@ -727,7 +778,13 @@ def doctor_patient_dossier_view(request, patient_id):
         return redirect("login")
 
     patient = get_object_or_404(Patient, id=patient_id)
-    ordonnances = Ordonnance.objects.filter(patient=patient).order_by('-date_created')
+    doctor = Doctor.objects.get(user__username=request.session["username"])
+
+    #✅ Filtrer par patient ET par docteur connecté
+    ordonnances = Ordonnance.objects.filter(
+        patient=patient,
+        doctor=doctor
+    ).order_by('-date_created')
 
     return render(request, "doctor_patient_dossier.html", {
         "patient": patient,

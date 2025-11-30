@@ -32,7 +32,15 @@
         <i class="fa-solid fa-file-medical w-5 h-5"></i>
         <span>Créer Ordonnance</span>
     </a>
-
+    <a href="{% url 'doctor_ordonnances' %}" class="flex items-center space-x-3 p-3 rounded-lg font-medium transition duration-150 ease-in-out
+          {% if request.resolver_match.url_name == 'doctor_ordonnances' %}
+            text-white bg-emerald-600 shadow-md
+          {% else %}
+            text-gray-700 hover:bg-gray-100
+          {% endif %}">
+      <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
+      <span>Mes Ordonnances</span>
+    </a>
     <a href="{% url 'profile_info' %}"
        class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
         <i class="fa-solid fa-user-gear w-5 h-5"></i>
