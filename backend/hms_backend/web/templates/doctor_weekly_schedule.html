@@ -45,14 +45,13 @@ const token   = "{{ access_token }}";
 const apiUrl  = "/api/users/doctor/weekly-schedule/";
 
 const dayFr = {
-  'Monday'   : 'Lundi',
-  'Tuesday'  : 'Mardi',
-  'Wednesday': 'Mercredi',
-  'Thursday' : 'Jeudi',
-  'Friday'   : 'Vendredi',
-  'Saturday' : 'Samedi',
-  'Sunday'   : 'Dimanche'
-};
+  'Lundi': 'Lundi',
+  'Mardi': 'Mardi',
+  'Mercredi': 'Mercredi',
+  'Jeudi': 'Jeudi',
+  'Vendredi': 'Vendredi',
+  'Samedi': 'Samedi'
+};;
 
 async function loadSchedule() {
   const res   = await fetch(apiUrl, {
@@ -63,14 +62,15 @@ async function loadSchedule() {
   const container = document.getElementById('schedule-container');
   let html = '';
 
-  for (const [dayEn, rdvs] of Object.entries(data)) {
-    const day = dayFr[dayEn] || dayEn;
+  for (const [key, obj] of Object.entries(data)) {
+    const label = obj.label; // ex. "Lundi 02/12/2025"
+    const rdvs = obj.rdvs;
 
     html += `
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-5">
       <div class="flex items-center gap-4 mb-3">
         <i class="fa-solid fa-calendar-day text-emerald-500 text-2xl"></i>
-        <h3 class="text-xl font-semibold text-gray-800">${day}</h3>
+        <h3 class="text-xl font-semibold text-gray-800">${label}</h3>
       </div>
 
       ${rdvs.length

@@ -157,3 +157,15 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 
 
+import locale
+from django.conf.locale.fr import formats as fr_formats
+
+# Langue et locale
+LANGUAGE_CODE = 'fr-fr'
+TIME_ZONE = 'Europe/Paris'
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
+
+# Forcer la locale française pour les formats de date
+locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')

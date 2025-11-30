@@ -403,6 +403,10 @@ def doctor_finished_patients(request):
 
 from datetime import timedelta
 from django.utils import timezone
+from django.utils import formats
+from django.utils.dateformat import format
+from django.utils.translation import gettext as _
+from django.utils import translation
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -413,18 +417,30 @@ def doctor_weekly_schedule(request):
 
     doctor = user.doctor_profile
     today = timezone.now().date()
-    # lundi → vendredi de cette semaine
-    week_days = [today + timedelta(days=i) for i in range(5)]
 
-    data = {}
-    for day in week_days:
-        rdv = Appointment.objects.filter(
-            doctor=doctor,
-            date=day,
-            status='CONFIRMED'
-        ).order_by('time').values('time', 'patient__full_name')
+    # Forcer la langue française
+    with translation.override('fr'):
+        data = {}
+        for i in range(6):
+            day = today + timedelta(days=i)
+            if day.weekday() == 6:  # dimanche
+                continue
 
-        data[day.strftime('%A')] = list(rdv)  # ex. "Lundi"
+            rdv = Appointment.objects.filter(
+                doctor=doctor,
+                date=day,
+                status='CONFIRMED'
+            ).order_by('time').values('time', 'patient__full_name')
+
+            # Jour en français
+            jour_nom = format(day, 'l').capitalize()  # ex: Lundi
+            label = f"{jour_nom} {day.strftime('%d/%m/%Y')}"
+
+            data[jour_nom] = {
+                'label': label,
+                'rdvs': list(rdv)
+            }
+
     return Response(data)
 
 
