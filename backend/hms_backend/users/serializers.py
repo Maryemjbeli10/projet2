@@ -237,7 +237,7 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
 class AppointmentSerializer(serializers.ModelSerializer):
     doctor_name = serializers.CharField(source='doctor.full_name', read_only=True)
     patient_name = serializers.CharField(source='patient.full_name', read_only=True)
-    patient = serializers.PrimaryKeyRelatedField(read_only=True)
+    patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
     class Meta:
         model = Appointment
         fields = [
@@ -255,13 +255,19 @@ class AppointmentSerializer(serializers.ModelSerializer):
         read_only_fields = ['status', 'created_at']  # 🟢 Le patient devient non obligatoire ici
 
     def validate(self, data):
-        doctor = data['doctor']
-        date = data['date']
-        time = data['time']
+        doctor = data.get('doctor', getattr(self.instance, 'doctor'))
+        date = data.get('date', getattr(self.instance, 'date'))
+        time = data.get('time', getattr(self.instance, 'time'))
 
-        if Appointment.objects.filter(doctor=doctor, date=date, time=time).exists():
+        if Appointment.objects.filter(
+            doctor=doctor,
+            date=date,
+            time=time
+        ).exclude(id=self.instance.id).exists():
             raise serializers.ValidationError("Ce créneau est déjà réservé pour ce docteur.")
+
         return data
+
 
 class OrdonnanceSerializer(serializers.ModelSerializer):
     doctor_name = serializers.CharField(source='doctor.full_name', read_only=True)

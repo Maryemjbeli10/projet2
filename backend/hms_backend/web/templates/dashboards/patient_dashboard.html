@@ -102,7 +102,7 @@
                 </thead>
                 <tbody>
                     {% for appt in appointments %}
-                        <tr class="hover:bg-gray-50" data-doctor-id="{{ appt.doctor }}">
+                        <tr class="hover:bg-gray-50" data-doctor-id="{{ appt.doctor }}" data-patient-id="{{ appt.patient }}">
                             <td class="py-2 px-4 border-b">{{ appt.doctor_name }}</td>
                             <td class="py-2 px-4 border-b">
                                 <span id="date-{{ appt.id }}">{{ appt.date }}</span>
@@ -207,17 +207,19 @@ function toggleEdit(id) {
 async function saveAppointment(id) {
     const appointmentRow = document.querySelector(`tr:has(#date-${id})`);
     const doctorId = appointmentRow.getAttribute('data-doctor-id');
+    const patientId = parseInt(appointmentRow.getAttribute('data-patient-id'));
 
     const payload = {
-        doctor: parseInt(doctorId),
-        date: document.getElementById(`date-input-${id}`).value,
-        time: document.getElementById(`time-input-${id}`).value,
-        reason: document.getElementById(`reason-input-${id}`).value,
+    doctor: parseInt(doctorId),
+    patient: patientId, // ✅ maintenant défini
+    date: document.getElementById(`date-input-${id}`).value,
+    time: document.getElementById(`time-input-${id}`).value,
+    reason: document.getElementById(`reason-input-${id}`).value,
     };
 
     try {
         const res = await fetch(`/api/users/appointments/${id}/update/`, {
-            method: 'PATCH',
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}',
@@ -228,7 +230,22 @@ async function saveAppointment(id) {
 
         if (res.ok) {
             alert("Rendez-vous modifié avec succès ✅");
-            location.reload();
+
+            // 🔁 Mise à jour visuelle sans reload
+            document.getElementById(`date-${id}`).textContent = payload.date;
+            document.getElementById(`time-${id}`).textContent = payload.time;
+            document.getElementById(`reason-${id}`).textContent = payload.reason;
+
+            // 🔁 Re-cache les inputs et remet le bouton "Modifier"
+            document.getElementById(`date-${id}`).style.display = 'inline';
+            document.getElementById(`date-input-${id}`).style.display = 'none';
+            document.getElementById(`time-${id}`).style.display = 'inline';
+            document.getElementById(`time-input-${id}`).style.display = 'none';
+            document.getElementById(`reason-${id}`).style.display = 'inline';
+            document.getElementById(`reason-input-${id}`).style.display = 'none';
+
+            document.querySelector(`button[onclick="toggleEdit(${id})"]`).style.display = 'inline';
+            document.getElementById(`save-btn-${id}`).style.display = 'none';
         } else {
             const errorData = await res.json();
             alert(`Erreur : ${errorData.error || 'Erreur lors de la modification'}`);
@@ -237,7 +254,6 @@ async function saveAppointment(id) {
         alert("Erreur réseau lors de la modification");
     }
 }
-
 async function deleteAppointment(id) {
     if(!confirm("Supprimer ce rendez-vous ?")) return;
     const res = await fetch(`/api/users/appointments/${id}/delete/`, {

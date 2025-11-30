@@ -229,7 +229,7 @@ class PatientAppointmentUpdateView(generics.UpdateAPIView):
         return appointment
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
+        partial = True
         instance = self.get_object()
         
         # Vérifier les conflits d'horaire
