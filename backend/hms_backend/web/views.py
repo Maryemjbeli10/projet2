@@ -242,6 +242,8 @@ def patient_dashboard(request):
 # ===============================
 # 🩺 Réserver un rendez-vous
 # ===============================
+from datetime import time
+
 def book_appointment_view(request, doctor_id):
     role = request.session.get("role")
     access_token = request.session.get("access_token")
@@ -251,29 +253,63 @@ def book_appointment_view(request, doctor_id):
         return redirect("login")
 
     headers = {"Authorization": f"Bearer {access_token}"}
-    doctor_details = {"id": doctor_id, "full_name": f"Docteur {doctor_id}", "specialization": "Médecin généraliste"}
+
+    # Récupération des données du docteur
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        messages.error(request, "Docteur introuvable.")
+        return redirect("patient_dashboard")
 
     if request.method == "POST":
-        appointment_data = {
-            "doctor": doctor_id,
-            "date": request.POST.get("date"),
-            "time": request.POST.get("time"),
-            "reason": request.POST.get("reason"),
-        }
+        date_str = request.POST.get("date")
+        time_str = request.POST.get("time")
 
+        # Validation
+        from datetime import datetime
         try:
-            response_booking = requests.post(API_BASE + "users/appointments/create/", json=appointment_data, headers=headers)
-            if response_booking.status_code == 201:
-                messages.success(request, "Rendez-vous réservé avec succès ✅")
-                return redirect("patient_dashboard")
-            else:
-                messages.error(request, f"Erreur : {response_booking.json()}")
-        except requests.exceptions.RequestException:
-            messages.error(request, "Erreur réseau lors de la réservation.")
+            rdv_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            rdv_time = datetime.strptime(time_str, "%H:%M").time()
+        except ValueError:
+            messages.error(request, "Date ou heure invalide.")
+            return redirect("book_appointment", doctor_id=doctor_id)
 
-    return render(request, "book_appointment.html", {"doctor": doctor_details})
+        weekday = rdv_date.weekday()  # 0=lundi, ..., 6=dimanche
 
+        # Dimanche interdit
+        if weekday == 6:
+            messages.error(request, "Les rendez-vous ne sont pas autorisés le dimanche.")
+            return redirect("book_appointment", doctor_id=doctor_id)
 
+        # Horaires
+        if 0 <= weekday <= 4:  # Lundi–Vendredi
+            if not (time(9, 0) <= rdv_time <= time(17, 0)):
+                messages.error(request, "Horaires autorisés : 9h à 17h du lundi au vendredi.")
+                return redirect("book_appointment", doctor_id=doctor_id)
+        elif weekday == 5:  # Samedi
+            if not (time(9, 0) <= rdv_time <= time(13, 0)):
+                messages.error(request, "Horaires autorisés : 9h à 13h le samedi.")
+                return redirect("book_appointment", doctor_id=doctor_id)
+
+        # Vérifier doublon
+        if Appointment.objects.filter(doctor=doctor, date=rdv_date, time=rdv_time).exists():
+            messages.error(request, "Ce créneau est déjà réservé.")
+            return redirect("book_appointment", doctor_id=doctor_id)
+
+        # Création du RDV
+        patient = Patient.objects.get(user__username=request.session["username"])
+        appointment = Appointment.objects.create(
+            doctor=doctor,
+            patient=patient,
+            date=rdv_date,
+            time=rdv_time,
+            reason=request.POST.get("reason"),
+            status='PENDING'
+        )
+        messages.success(request, "Rendez-vous réservé avec succès ✅")
+        return redirect("patient_dashboard")
+
+    return render(request, "book_appointment.html", {"doctor": doctor})
 
 # ===============================
 # 🧑‍💼 Dashboard Admin
