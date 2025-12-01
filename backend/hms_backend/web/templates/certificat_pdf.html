@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Certificat Médical</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      body { margin: 0; }
+      .no-break { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+
+<body class="bg-white text-gray-800 text-sm">
+  <div class="max-w-3xl mx-auto p-6">
+
+    <!-- HEADER -->
+    <div class="flex items-center border-b pb-4 mb-6 no-break">
+      <img src="{{ logo_path }}" class="h-14 w-auto mr-3" alt="Logo">
+
+      <div class="flex flex-col">
+        <h1 class="text-2xl font-bold text-blue-700 tracking-wide">Certificat Médical</h1>
+        <p class="text-xs text-gray-500 mt-1">
+          Dr {{ certificat.doctor.full_name }} — {{ certificat.doctor.specialization }}
+        </p>
+      </div>
+
+      <div class="ml-auto text-right text-xs text-gray-500">
+        <p><strong>Date :</strong> {{ certificat.date_created|date:"d/m/Y" }}</p>
+      </div>
+    </div>
+
+    <!-- PATIENT INFO -->
+    <div class="bg-gray-50 border rounded-lg p-4 no-break">
+      <p>
+        <span class="text-gray-500 font-semibold">Patient :</span>
+        {{ certificat.patient.full_name }}
+      </p>
+    </div>
+
+    <!-- CONTENU -->
+    <div class="mt-6 no-break">
+      <h2 class="text-gray-600 text-xs uppercase font-semibold tracking-wide">Contenu du certificat</h2>
+      <div class="mt-2 p-4 bg-blue-50 border-l-4 border-blue-600 rounded shadow-sm leading-relaxed whitespace-pre-line">
+        {{ certificat.content|default:"-" }}
+      </div>
+    </div>
+
+    <!-- SIGNATURE -->
+    <div class="mt-10 flex justify-between items-end no-break">
+      <div class="text-xs text-gray-500">
+        <p>Fait le {{ certificat.date_created|date:"d/m/Y" }}</p>
+        <p class="font-semibold text-gray-800">Dr {{ certificat.doctor.full_name }}</p>
+        <p>{{ certificat.doctor.specialization }}</p>
+      </div>
+
+      <div class="text-right">
+        {% if stamp_path %}
+          <img src="{{ stamp_path }}" class="h-20 opacity-90" alt="Cachet">
+        {% else %}
+          <p class="text-gray-400 italic">Signature du médecin</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="mt-10 text-center text-[10px] text-gray-400 border-t pt-3">
+      Conservez ce certificat précieusement.
+    </div>
+  </div>
+
+  <script>window.onload = () => window.print();</script>
+</body>
+</html>

@@ -963,8 +963,23 @@ def doctor_certificats_view(request):
 
 def certificat_pdf_view(request, certificat_id):
     certificat = get_object_or_404(Certificat, id=certificat_id, doctor__user__username=request.session["username"])
-    html = render_to_string("certificat_pdf.html", {"certificat": certificat})
-    pdf = pdfkit.from_string(html, False, configuration=config, options=requests.options)
+
+    logo_abs_path = os.path.abspath(
+        os.path.join(settings.BASE_DIR, "web", "static", "images", "logo.png")
+    ).replace("\\", "/")
+    logo_path = f"file:///{logo_abs_path}"
+
+    html = render_to_string("certificat_pdf.html", {
+        "certificat": certificat,
+        "logo_path": logo_path,
+        "stamp_path": None  # ou ton cachet
+    })
+
+    path_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+    options = {'encoding': 'UTF-8', 'enable-local-file-access': None}
+
+    pdf = pdfkit.from_string(html, False, configuration=config, options=options)
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="certificat_{certificat.id}.pdf"'
     return response
