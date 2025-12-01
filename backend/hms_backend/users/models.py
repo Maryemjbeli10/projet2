@@ -89,3 +89,15 @@ class Ordonnance(models.Model):
 
     def __str__(self):
         return f"Ordonnance #{self.id} pour {self.patient.full_name}"
+    
+
+
+class Certificat(models.Model):
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name='certificat')
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='certificats')
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='certificats')
+    content = models.TextField()  # texte libre du certificat
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Certificat #{self.id} pour {self.patient.full_name}"    

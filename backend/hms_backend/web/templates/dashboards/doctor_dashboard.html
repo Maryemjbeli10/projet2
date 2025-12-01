@@ -118,8 +118,8 @@
 
         {% if appointments_with_patients %}
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <thead class="bg-emerald-50 text-gray-700">
                         <tr>
                             <th class="py-3 px-4 text-left">Date</th>
                             <th class="py-3 px-4 text-left">Heure</th>
@@ -188,6 +188,7 @@
                             <th class="py-3 px-4 text-left">Date</th>
                             <th class="py-3 px-4 text-left">Heure</th>
                             <th class="py-3 px-4 text-left">Patient</th>
+                            <th class="py-3 px-4 text-left">Âge</th>
                             <th class="py-3 px-4 text-left">Téléphone</th>
                             <th class="py-3 px-4 text-left">Motif</th>
                         </tr>
@@ -198,6 +199,7 @@
                             <td class="py-3 px-4">{{ a.date }}</td>
                             <td class="py-3 px-4">{{ a.time }}</td>
                             <td class="py-3 px-4 font-medium">{{ a.patient.full_name }}</td>
+                            <td class="py-3 px-4">{{ a.patient.age }}</td>
                             <td class="py-3 px-4">{{ a.patient.phone }}</td>
                             <td class="py-3 px-4">{{ a.reason|truncatechars:50 }}</td>
                         </tr>
@@ -227,6 +229,7 @@
                     <th class="py-3 px-4 text-left">Date</th>
                     <th class="py-3 px-4 text-left">Heure</th>
                     <th class="py-3 px-4 text-left">Patient</th>
+                    <th class="py-3 px-4 text-left">Âge</th>
                     <th class="py-3 px-4 text-left">Télephone</th>
                     <th class="py-3 px-4 text-left">Motif</th>
                     <th class="py-3 px-4 text-left">Action</th>
@@ -238,6 +241,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ a.date }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ a.time }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ a.patient.full_name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ a.patient.age }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ a.patient.phone }}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">{{ a.reason|truncatechars:40 }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -251,7 +255,18 @@
                             <i class="fa-solid fa-file-prescription mr-1"></i> Créer ordonnance
                             </a>
                         {% endif %}
-                        </td>
+                    
+                        {% if a.certificat_created %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-emerald-800">
+                            <i class="fa-solid fa-check mr-1"></i>Certificat créé
+                        </span>
+                        {% else %}
+                        <a href="{% url 'create_certificat_from_appointment' appointment_id=a.id %}"
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow text-white bg-emerald-600 hover:bg-emerald-700">
+                            <i class="fa-solid fa-file-medical mr-1"></i> Créer certificat
+                        </a>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
                 </tbody>

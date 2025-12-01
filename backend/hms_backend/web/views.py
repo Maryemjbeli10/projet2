@@ -1,3 +1,4 @@
+from logging import config
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -13,7 +14,7 @@ from django.http import JsonResponse
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
-from users.models import Doctor, Patient, User, Appointment, Ordonnance
+from users.models import Certificat, Doctor, Patient, User, Appointment, Ordonnance
 from users.serializers import PatientRegisterSerializer, AdminRegisterSerializer, DoctorRegisterSerializer
 
 API_BASE = "http://127.0.0.1:8000/api/"
@@ -162,13 +163,12 @@ def doctor_dashboard(request):
         resp_completed = requests.get(f"{API_BASE}users/doctors/appointments/?status=COMPLETED", headers=headers)
         if resp_completed.status_code == 200:
             data = resp_completed.json()
-            # data["results"] contient la liste des RDV
             for appt in data.get("results", []):
-                # On enrichit chaque RDV
                 rdv_id = appt["id"]
-                # Vérifie si une ordonnance existe déjà pour ce RDV
                 ord_exists = Ordonnance.objects.filter(appointment_id=rdv_id).exists()
+                cert_exists = Certificat.objects.filter(appointment_id=rdv_id).exists()
                 appt["ordonnance_created"] = ord_exists
+                appt["certificat_created"] = cert_exists
                 completed_appointments.append(appt)
     except requests.exceptions.RequestException:
         pass
@@ -910,3 +910,61 @@ def create_ordonnance_from_appointment_view(request, appointment_id):
         "appointment_date": appointment["date"],
     }
     return render(request, "create_ordonnance_from_appointment.html", context)
+
+
+def create_certificat_from_appointment_view(request, appointment_id):
+    role = request.session.get("role")
+    access_token = request.session.get("access_token")
+
+    if role != "doctor" or not access_token:
+        messages.error(request, "Accès non autorisé.")
+        return redirect("doctor_dashboard")
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    try:
+        resp = requests.get(f"http://127.0.0.1:8000/api/users/appointments/{appointment_id}/", headers=headers)
+        if resp.status_code != 200:
+            raise ValueError("RDV introuvable")
+        appointment = resp.json()
+    except Exception as exc:
+        messages.error(request, f"Erreur : {exc}")
+        return redirect("doctor_dashboard")
+
+    if appointment["status"] != "COMPLETED":
+        messages.error(request, "Un certificat ne peut être créé que pour un RDV terminé.")
+        return redirect("doctor_dashboard")
+
+    doctor = Doctor.objects.get(user__username=request.session["username"])
+    patient = Patient.objects.get(id=appointment["patient"])
+
+    if request.method == "POST":
+        Certificat.objects.create(
+            doctor=doctor,
+            patient=patient,
+            appointment_id=appointment_id,
+            content=request.POST.get("content", "").strip()
+        )
+        messages.success(request, "Certificat médical créé ✅")
+        return redirect("doctor_certificats")
+
+    context = {
+        "patient": patient,
+        "appointment_date": appointment["date"],
+    }
+    return render(request, "create_certificat_from_appointment.html", context)
+
+
+def doctor_certificats_view(request):
+    doctor = Doctor.objects.get(user__username=request.session["username"])
+    certificats = Certificat.objects.filter(doctor=doctor).select_related('patient')
+    return render(request, "doctor_certificats_list.html", {"certificats": certificats})
+
+
+def certificat_pdf_view(request, certificat_id):
+    certificat = get_object_or_404(Certificat, id=certificat_id, doctor__user__username=request.session["username"])
+    html = render_to_string("certificat_pdf.html", {"certificat": certificat})
+    pdf = pdfkit.from_string(html, False, configuration=config, options=requests.options)
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="certificat_{certificat.id}.pdf"'
+    return response

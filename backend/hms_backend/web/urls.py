@@ -39,4 +39,11 @@ urlpatterns = [
     path('doctor/ordonnances/', views.doctor_ordonnances_view, name='doctor_ordonnances'),
     path('doctor/patient/<int:patient_id>/dossier/', views.doctor_patient_dossier_view, name='doctor_patient_dossier'),
     path('doctor/ordonnances/create/from-appointment/<int:appointment_id>/', views.create_ordonnance_from_appointment_view, name='create_ordonnance_from_appointment'),
+    path('doctor/certificats/create/from-appointment/<int:appointment_id>/', views.create_certificat_from_appointment_view, name='create_certificat_from_appointment'),
+    path('doctor/certificats/', views.doctor_certificats_view, name='doctor_certificats'),
+    path('doctor/certificats/<int:certificat_id>/pdf/', views.certificat_pdf_view, name='certificat_pdf'),
+
+
+
+
 ]

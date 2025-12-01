@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Certificats médicaux{% endblock %}
+{% block header %}Mes Certificats médicaux{% endblock %}
+
+{% block sidebar %}
+    <!-- même sidebar que dans doctor_ordonnances_list.html -->
+    <a href="{% url 'doctor_dashboard' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-gauge-high w-5 h-5"></i>
+        <span>Tableau de bord</span>
+    </a>
+    <a href="{% url 'doctor_finished_patients' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-user-check w-5 h-5"></i>
+        <span>Mes Patients</span>
+    </a>
+    <!--
+    <a href="{% url 'doctor_ordonnances' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
+        <span>Mes Ordonnances</span>
+    </a>
+    
+    <a href="{% url 'doctor_certificats' %}" class="flex items-center space-x-3 p-3 rounded-lg font-medium text-white bg-emerald-600 shadow-md transition">
+        <i class="fa-solid fa-file-medical w-5 h-5"></i>
+        <span>Mes Certificats</span>
+    </a>
+    -->
+    <a href="{% url 'doctor_weekly_schedule' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-calendar-week w-5 h-5"></i>
+        <span>Mon Planning</span>
+    </a>
+    <a href="{% url 'profile_info' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-user-gear w-5 h-5"></i>
+        <span>Mon Profil</span>
+    </a>
+{% endblock %}
+
+{% block content %}
+{% if certificats %}
+  <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {% for cert in certificats %}
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition">
+        <div class="flex justify-between items-start mb-4">
+          <span class="text-sm font-semibold text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full">#{{ cert.id }}</span>
+          <span class="text-xs text-gray-500">{{ cert.date_created|date:"d/m/Y" }}</span>
+        </div>
+
+        <h3 class="text-lg font-bold text-gray-900 mb-1">{{ cert.patient.full_name }}</h3>
+        <p class="text-sm text-gray-600 mb-4">{{ cert.patient.age }} ans • {{ cert.patient.phone }}</p>
+
+        <p class="text-sm text-gray-700 mb-4 line-clamp-3">{{ cert.content|truncatewords:15 }}</p>
+
+        <div class="mt-4 flex items-center justify-between">
+          <a href="{% url 'certificat_pdf' cert.id %}"
+             class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">
+            <i class="fa-solid fa-download mr-2"></i> Télécharger PDF
+          </a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="text-center py-12">
+    <i class="fa-solid fa-file-medical text-6xl text-gray-300 mb-4"></i>
+    <h2 class="text-xl font-semibold text-gray-700">Aucun certificat trouvé</h2>
+    <p class="text-gray-500 mt-2">Créez-en un depuis un rendez-vous terminé.</p>
+  </div>
+{% endif %}
+{% endblock %}
