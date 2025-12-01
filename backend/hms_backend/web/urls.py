@@ -38,4 +38,5 @@ urlpatterns = [
     path('patient/history/', views.patient_history_view, name='patient_history'),
     path('doctor/ordonnances/', views.doctor_ordonnances_view, name='doctor_ordonnances'),
     path('doctor/patient/<int:patient_id>/dossier/', views.doctor_patient_dossier_view, name='doctor_patient_dossier'),
+    path('doctor/ordonnances/create/from-appointment/<int:appointment_id>/', views.create_ordonnance_from_appointment_view, name='create_ordonnance_from_appointment'),
 ]

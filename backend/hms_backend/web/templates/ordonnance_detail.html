@@ -1,3 +1,9 @@
+{% if read_only %}
+  <div class="mb-4 p-3 bg-amber-100 text-amber-800 rounded-lg border border-amber-300">
+    <i class="fa-solid fa-lock mr-2"></i>
+    Cette ordonnance est <strong>verrouillée</strong> : lecture seule, aucune modification possible.
+  </div>
+{% endif %}
 {% extends 'base.html' %}
 
 {% block title %}Détails Ordonnance{% endblock %}

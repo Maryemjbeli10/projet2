@@ -72,6 +72,13 @@ class Appointment(models.Model):
         return f"RDV: {self.patient.full_name} avec Dr. {self.doctor.full_name} le {self.date}"
 
 class Ordonnance(models.Model):
+    appointment = models.OneToOneField(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name='ordonnance',
+        null=True,  # pour les anciennes ordonnances
+        blank=True
+    )
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='ordonnances')
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='ordonnances')
     prescription = models.TextField(blank=True, null=True)

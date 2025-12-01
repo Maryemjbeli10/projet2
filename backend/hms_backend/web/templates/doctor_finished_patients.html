@@ -23,6 +23,7 @@
         <i class="fa-solid fa-calendar-week w-5 h-5"></i>
         <span>Mon Planning</span>
     </a>
+    <!--
     <a href="{% url 'create_ordonnance' %}"class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
         <i class="fa-solid fa-calendar-check w-5 h-5"></i>
         <span>Créer Ordonnance
@@ -32,6 +33,7 @@
         <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
         <span>Mes Ordonnances</span>
     </a>
+    -->
     <a href="{% url 'profile_info' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
         <i class="fa-solid fa-user-gear w-5 h-5"></i>
         <span>Mon Profil</span>
@@ -40,13 +42,20 @@
 {% endblock %}
 
 {% block content %}
-<div class="mb-6">
+<div class="mb-6 flex items-center justify-between">
   <input
     type="text"
     id="searchInput"
     placeholder="Rechercher un patient..."
     class="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
   />
+
+  <!-- Bouton Mes ordonnances -->
+  <a href="{% url 'doctor_ordonnances' %}"
+     class="ml-4 inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 transition">
+    <i class="fa-solid fa-prescription-bottle-medical mr-2"></i>
+    Mes ordonnances
+  </a>
 </div>
 
 <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

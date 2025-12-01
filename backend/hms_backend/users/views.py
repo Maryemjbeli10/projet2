@@ -321,34 +321,55 @@ def edit_appointment_view(request, id):
 
 from rest_framework.decorators import api_view, permission_classes
 
+from django.core.paginator import Paginator
+from datetime import date
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def doctor_appointments_with_patients(request):
     user = request.user
-
     if user.role != 'doctor':
-        return Response({"error": "Accès refusé. Seul un docteur peut consulter ses rendez-vous."}, status=403)
+        return Response({"error": "Accès refusé."}, status=403)
 
-    appointments = Appointment.objects.filter(doctor=user.doctor_profile).select_related('patient').order_by('-date', '-time')
+    doctor = user.doctor_profile
 
-    data = [
-        {
-            "id": a.id,
-            "date": a.date,
-            "time": a.time,
-            "reason": a.reason,
-            "status": a.status,
-            "patient": {
-                "full_name": a.patient.full_name,
-                "age": a.patient.age,
-                "phone": a.patient.phone,
-                "email": a.patient.user.email,
-            }
+    # --- filtres ---
+    wanted_status = request.GET.get('status')          # CONFIRMED / COMPLETED / vide
+    search        = request.GET.get('search', '').strip()
+    page_number   = int(request.GET.get('page', 1))
+    page_size     = int(request.GET.get('page_size', 10))  # 10 par défaut
+
+    qs = Appointment.objects.filter(doctor=doctor).select_related('patient').order_by('-date', '-time')
+
+    if wanted_status in ('CONFIRMED','COMPLETED'):
+        qs = qs.filter(status=wanted_status)
+    if search:
+        qs = qs.filter(patient__full_name__icontains=search)
+
+    paginator = Paginator(qs, page_size)
+    page = paginator.get_page(page_number)
+
+    data = [{
+        "id": a.id,
+        "date": a.date,
+        "time": a.time,
+        "reason": a.reason,
+        "status": a.status,
+        "patient": {
+            "full_name": a.patient.full_name,
+            "age": a.patient.age,
+            "phone": a.patient.phone,
+            "email": a.patient.user.email,
         }
-        for a in appointments
-    ]
+    } for a in page.object_list]
 
-    return Response(data)
+    return Response({
+        "count"    : paginator.count,
+        "num_pages": paginator.num_pages,
+        "current"  : page.number,
+        "results"  : data
+    })
+
 
 def admin_confirmed_appointments(request):
     if request.session.get("role") != "admin":

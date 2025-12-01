@@ -127,9 +127,12 @@ def doctor_dashboard(request):
         resp_perf = requests.get(f"{API_BASE}doctors/{username}/weekly-performance/", headers=headers)
         weekly_performance_data = resp_perf.json() if resp_perf.status_code == 200 else []
 
-        # ✅ NOUVEAU : récupérer tous les RDV avec patients
         resp_appointments = requests.get(f"{API_BASE}users/doctors/appointments/", headers=headers)
-        appointments_with_patients = resp_appointments.json() if resp_appointments.status_code == 200 else []
+        if resp_appointments.status_code == 200:
+            data = resp_appointments.json()
+            appointments_with_patients = data.get("results", [])
+    except requests.exceptions.RequestException:
+        pass
 
     except requests.exceptions.RequestException:
         messages.warning(request, "Erreur de connexion au backend.")
@@ -146,13 +149,27 @@ def doctor_dashboard(request):
     # ----- Agenda : RDV confirmés -----
     confirmed_appointments = []
     try:
-        resp_agenda = requests.get(f"{API_BASE}users/doctors/appointments/", headers=headers)
+        resp_agenda = requests.get(f"{API_BASE}users/doctors/appointments/?status=CONFIRMED", headers=headers)
         if resp_agenda.status_code == 200:
-            all_appointments = resp_agenda.json()
-            confirmed_appointments = [
-                a for a in all_appointments if a['status'] == 'CONFIRMED'
-            ]
-            confirmed_appointments.sort(key=lambda x: (x['date'], x['time']))
+            data = resp_agenda.json()
+            confirmed_appointments = data.get("results", [])   # ✅ on prend la vraie liste
+    except requests.exceptions.RequestException:
+        pass
+    
+    # ----- RDV terminés -----
+    completed_appointments = []
+    try:
+        resp_completed = requests.get(f"{API_BASE}users/doctors/appointments/?status=COMPLETED", headers=headers)
+        if resp_completed.status_code == 200:
+            data = resp_completed.json()
+            # data["results"] contient la liste des RDV
+            for appt in data.get("results", []):
+                # On enrichit chaque RDV
+                rdv_id = appt["id"]
+                # Vérifie si une ordonnance existe déjà pour ce RDV
+                ord_exists = Ordonnance.objects.filter(appointment_id=rdv_id).exists()
+                appt["ordonnance_created"] = ord_exists
+                completed_appointments.append(appt)
     except requests.exceptions.RequestException:
         pass
 
@@ -166,6 +183,7 @@ def doctor_dashboard(request):
         "weekly_performance_data": weekly_performance_data,
         "appointments_with_patients": appointments_with_patients,
         "confirmed_appointments": confirmed_appointments,
+        "completed_appointments": completed_appointments,
     })
 
 # ===============================
@@ -548,13 +566,17 @@ def create_ordonnance_view(request):
 def ordonnance_detail_view(request, ordonnance_id):
     ordonnance = get_object_or_404(Ordonnance, id=ordonnance_id)
 
-    # Vérifier que le docteur connecté est le propriétaire
     if request.session.get("role") != "doctor" or ordonnance.doctor.user.username != request.session.get("username"):
         messages.error(request, "Accès refusé.")
         return redirect("doctor_dashboard")
 
-    return render(request, "ordonnance_detail.html", {"ordonnance": ordonnance})
+    # ✅ Interdire modification/suppression
+    read_only = True
 
+    return render(request, "ordonnance_detail.html", {
+        "ordonnance": ordonnance,
+        "read_only": read_only,
+    })
 
 def ordonnance_pdf_view(request, ordonnance_id):
     ordonnance = get_object_or_404(Ordonnance, id=ordonnance_id)
@@ -826,3 +848,65 @@ def doctor_patient_dossier_view(request, patient_id):
         "patient": patient,
         "ordonnances": ordonnances,
     })
+
+def create_ordonnance_from_appointment_view(request, appointment_id):
+    role = request.session.get("role")
+    access_token = request.session.get("access_token")
+
+    if role != "doctor" or not access_token:
+        messages.error(request, "Accès non autorisé.")
+        return redirect("doctor_dashboard")
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    # ---------- DEBUG ----------
+    print(f"🔍 RDV id={appointment_id} demandé par {request.session.get('username')}")
+    # ----------------------------
+
+    # 1. Récupérer le RDV
+    try:
+        resp = requests.get(
+        f"http://127.0.0.1:8000/api/users/appointments/{appointment_id}/",
+            headers=headers
+        )
+        print(f"🔍 API status : {resp.status_code}")
+        if resp.status_code != 200:
+            raise ValueError("RDV introuvable ou pas le tien")
+        appointment = resp.json()
+    except Exception as exc:
+        messages.error(request, f"Erreur lors de la récupération du RDV : {exc}")
+        return redirect("doctor_dashboard")
+
+    # 2. Vérifier qu’il est bien terminé
+    if appointment["status"] != "COMPLETED":
+        messages.error(request, "L’ordonnance ne peut être créée que pour un RDV terminé.")
+        return redirect("doctor_dashboard")
+
+    doctor = Doctor.objects.get(user__username=request.session["username"])
+    patient = Patient.objects.get(id=appointment["patient"])
+
+    # 3. POST = création
+    if request.method == "POST":
+        diagnostic = request.POST.get("diagnostic", "").strip() or None
+        prescription = request.POST.get("prescription", "").strip() or None
+        notes = request.POST.get("notes", "").strip() or None
+        priority = request.POST.get("priority", "Normal")
+
+        ordonnance = Ordonnance.objects.create(
+            doctor=doctor,
+            patient=patient,
+            appointment_id=appointment_id,
+            diagnostic=diagnostic,
+            prescription=prescription,
+            notes=notes,
+            priority=priority,
+        )
+        messages.success(request, "Ordonnance créée avec succès ✅")
+        return redirect("doctor_finished_patients")
+    
+    # 4. GET = formulaire
+    context = {
+        "patient": patient,
+        "appointment_date": appointment["date"],
+    }
+    return render(request, "create_ordonnance_from_appointment.html", context)

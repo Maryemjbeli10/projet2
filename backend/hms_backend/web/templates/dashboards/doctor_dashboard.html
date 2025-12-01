@@ -24,7 +24,7 @@
         <i class="fa-solid fa-calendar-week w-5 h-5"></i>
         <span>Mon Planning</span>
     </a>
-
+    <!--
     <a href="{% url 'create_ordonnance' %}" 
        class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
         <i class="fa-solid fa-calendar-check w-5 h-5"></i>
@@ -36,7 +36,7 @@
         <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
         <span>Mes Ordonnances</span>
     </a>
-
+    -->
     <a href="{% url 'profile_info' %}" 
        class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
         <i class="fa-solid fa-user-gear w-5 h-5"></i>
@@ -110,108 +110,161 @@
         </div>
     </div>
 
-    <!-- 📅 Tous les rendez-vous avec patients -->
-<div class="mt-10 bg-white p-8 rounded-2xl shadow-xl">
+        <!-- 📅 Tous les rendez-vous avec patients -->
+    <div class="mt-10 bg-white p-8 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-extrabold text-gray-800 mb-6 border-b pb-3 flex items-center">
+            <i class="fa-solid fa-calendar-days text-emerald-500 mr-3"></i> Gérer mes rendez-vous
+        </h2>
+
+        {% if appointments_with_patients %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="py-3 px-4 text-left">Date</th>
+                            <th class="py-3 px-4 text-left">Heure</th>
+                            <th class="py-3 px-4 text-left">Patient</th>
+                            <th class="py-3 px-4 text-left">Âge</th>
+                            <th class="py-3 px-4 text-left">Téléphone</th>
+                            <th class="py-3 px-4 text-left">Motif</th>
+                            <th class="py-3 px-4 text-left">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        {% for a in appointments_with_patients %}
+                        <tr class="hover:bg-emerald-50 transition duration-150 ease-in-out">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ a.date }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ a.time }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ a.patient.full_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.patient.age }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.patient.phone }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.reason|truncatechars:40 }}</td>
+
+                            <!-- PASTILLE COULEUR + BLOCAGE SI ANNULÉ OU TERMINÉ -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if a.status in 'COMPLETED,CANCELLED' %}
+                                    <!-- Grisé + inutilisable -->
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                {% if a.status == 'COMPLETED' %}bg-gray-200 text-gray-700{% else %}bg-red-100 text-red-700{% endif %} select-none">
+                                        {% if a.status == 'COMPLETED' %}Terminé{% else %}Annulé{% endif %}
+                                    </span>
+                                {% else %}
+                                    <select onchange="changeStatus({{ a.id }}, this.value)"
+                                            class="text-xs border rounded px-2 py-1 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500
+                                            {% if a.status == 'PENDING' %}border-amber-400 text-amber-700
+                                            {% elif a.status == 'CONFIRMED' %}border-green-400 text-green-700
+                                            {% endif %}">
+                                        <option value="PENDING"   {% if a.status == 'PENDING' %}selected{% endif %} class="bg-white text-amber-700">En attente</option>
+                                        <option value="CONFIRMED" {% if a.status == 'CONFIRMED' %}selected{% endif %} class="bg-white text-green-700">Confirmé</option>
+                                        <option value="CANCELLED" {% if a.status == 'CANCELLED' %}selected{% endif %} class="bg-white text-red-700">Annulé</option>
+                                        <option value="COMPLETED" {% if a.status == 'COMPLETED' %}selected{% endif %} class="bg-white text-gray-700">Terminé</option>
+                                    </select>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-500 p-6 border border-dashed rounded-xl bg-gray-50 text-center shadow-inner">
+                <i class="fa-solid fa-circle-info mr-2 text-xl text-gray-400"></i>
+                Aucun rendez-vous trouvé.
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- 📅 Mon Agenda (RDV confirmés) -->
+    <div class="mt-10 bg-white p-8 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-extrabold text-gray-800 mb-6 border-b pb-3 flex items-center">
+            <i class="fa-solid fa-calendar-check text-emerald-500 mr-3"></i> RDV confirmés
+        </h2>
+
+        {% if confirmed_appointments %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <thead class="bg-emerald-50 text-gray-700">
+                        <tr>
+                            <th class="py-3 px-4 text-left">Date</th>
+                            <th class="py-3 px-4 text-left">Heure</th>
+                            <th class="py-3 px-4 text-left">Patient</th>
+                            <th class="py-3 px-4 text-left">Téléphone</th>
+                            <th class="py-3 px-4 text-left">Motif</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for a in confirmed_appointments %}
+                        <tr class="hover:bg-emerald-50 transition">
+                            <td class="py-3 px-4">{{ a.date }}</td>
+                            <td class="py-3 px-4">{{ a.time }}</td>
+                            <td class="py-3 px-4 font-medium">{{ a.patient.full_name }}</td>
+                            <td class="py-3 px-4">{{ a.patient.phone }}</td>
+                            <td class="py-3 px-4">{{ a.reason|truncatechars:50 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-500 p-6 border border-dashed rounded-xl bg-gray-50 text-center">
+                <i class="fa-solid fa-circle-info mr-2 text-xl text-gray-400"></i>
+                Aucun rendez-vous confirmé pour le moment.
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- RDV TERMINÉS -->
+    <div class="mt-10 bg-white p-8 rounded-2xl shadow-xl">
     <h2 class="text-2xl font-extrabold text-gray-800 mb-6 border-b pb-3 flex items-center">
-        <i class="fa-solid fa-calendar-days text-emerald-500 mr-3"></i> Gérer mes rendez-vous
+        <i class="fa-solid fa-check-double text-emerald-500 mr-3"></i> RDV Terminés
     </h2>
 
-    {% if appointments_with_patients %}
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Heure</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Âge</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Téléphone</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Motif</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
-                    {% for a in appointments_with_patients %}
-                    <tr class="hover:bg-emerald-50 transition duration-150 ease-in-out">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ a.date }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ a.time }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ a.patient.full_name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.patient.age }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.patient.phone }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.reason|truncatechars:40 }}</td>
-
-                        <!-- PASTILLE COULEUR + BLOCAGE SI ANNULÉ OU TERMINÉ -->
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {% if a.status in 'COMPLETED,CANCELLED' %}
-                                <!-- Grisé + inutilisable -->
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            {% if a.status == 'COMPLETED' %}bg-gray-200 text-gray-700{% else %}bg-red-100 text-red-700{% endif %} select-none">
-                                    {% if a.status == 'COMPLETED' %}Terminé{% else %}Annulé{% endif %}
-                                </span>
-                            {% else %}
-                                <select onchange="changeStatus({{ a.id }}, this.value)"
-                                        class="text-xs border rounded px-2 py-1 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500
-                                        {% if a.status == 'PENDING' %}border-amber-400 text-amber-700
-                                        {% elif a.status == 'CONFIRMED' %}border-green-400 text-green-700
-                                        {% endif %}">
-                                    <option value="PENDING"   {% if a.status == 'PENDING' %}selected{% endif %} class="bg-white text-amber-700">En attente</option>
-                                    <option value="CONFIRMED" {% if a.status == 'CONFIRMED' %}selected{% endif %} class="bg-white text-green-700">Confirmé</option>
-                                    <option value="CANCELLED" {% if a.status == 'CANCELLED' %}selected{% endif %} class="bg-white text-red-700">Annulé</option>
-                                    <option value="COMPLETED" {% if a.status == 'COMPLETED' %}selected{% endif %} class="bg-white text-gray-700">Terminé</option>
-                                </select>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <p class="text-gray-500 p-6 border border-dashed rounded-xl bg-gray-50 text-center shadow-inner">
-            <i class="fa-solid fa-circle-info mr-2 text-xl text-gray-400"></i>
-            Aucun rendez-vous trouvé.
-        </p>
-    {% endif %}
-</div>
-
-<!-- 📅 Mon Agenda (RDV confirmés) -->
-<div class="mt-10 bg-white p-8 rounded-2xl shadow-xl">
-    <h2 class="text-2xl font-extrabold text-gray-800 mb-6 border-b pb-3 flex items-center">
-        <i class="fa-solid fa-calendar-check text-emerald-500 mr-3"></i> RDV confirmés
-    </h2>
-
-    {% if confirmed_appointments %}
-        <div class="overflow-x-auto">
+        {% if completed_appointments %}
+            <div class="overflow-x-auto">
             <table class="min-w-full bg-white border border-gray-200 rounded-xl shadow-sm">
                 <thead class="bg-emerald-50 text-gray-700">
-                    <tr>
-                        <th class="py-3 px-4 text-left">Date</th>
-                        <th class="py-3 px-4 text-left">Heure</th>
-                        <th class="py-3 px-4 text-left">Patient</th>
-                        <th class="py-3 px-4 text-left">Téléphone</th>
-                        <th class="py-3 px-4 text-left">Motif</th>
-                    </tr>
+                <tr>
+                    <th class="py-3 px-4 text-left">Date</th>
+                    <th class="py-3 px-4 text-left">Heure</th>
+                    <th class="py-3 px-4 text-left">Patient</th>
+                    <th class="py-3 px-4 text-left">Télephone</th>
+                    <th class="py-3 px-4 text-left">Motif</th>
+                    <th class="py-3 px-4 text-left">Action</th>
+                </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                    {% for a in confirmed_appointments %}
-                    <tr class="hover:bg-emerald-50 transition">
-                        <td class="py-3 px-4">{{ a.date }}</td>
-                        <td class="py-3 px-4">{{ a.time }}</td>
-                        <td class="py-3 px-4 font-medium">{{ a.patient.full_name }}</td>
-                        <td class="py-3 px-4">{{ a.patient.phone }}</td>
-                        <td class="py-3 px-4">{{ a.reason|truncatechars:50 }}</td>
-                    </tr>
-                    {% endfor %}
+                <tbody class="bg-white divide-y divide-gray-100">
+                {% for a in completed_appointments %}
+                <tr class="hover:bg-emerald-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ a.date }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ a.time }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ a.patient.full_name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ a.patient.phone }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">{{ a.reason|truncatechars:40 }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if a.ordonnance_created %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                            <i class="fa-solid fa-check mr-1"></i>Ordonnance créée
+                            </span>
+                        {% else %}
+                            <a href="{% url 'create_ordonnance_from_appointment' appointment_id=a.id %}"
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow text-white bg-emerald-600 hover:bg-emerald-700">
+                            <i class="fa-solid fa-file-prescription mr-1"></i> Créer ordonnance
+                            </a>
+                        {% endif %}
+                        </td>
+                </tr>
+                {% endfor %}
                 </tbody>
             </table>
-        </div>
-    {% else %}
-        <p class="text-gray-500 p-6 border border-dashed rounded-xl bg-gray-50 text-center">
+            </div>
+        {% else %}
+            <p class="text-gray-500 p-6 border border-dashed rounded-xl bg-gray-50 text-center">
             <i class="fa-solid fa-circle-info mr-2 text-xl text-gray-400"></i>
-            Aucun rendez-vous confirmé pour le moment.
-        </p>
-    {% endif %}
-</div>
+            Aucun RDV terminé pour le moment.
+            </p>
+        {% endif %}
+    </div>
+
 
         <!-- 🚨 Alertes -->
         <div class="mt-10 bg-white p-8 rounded-2xl shadow-xl">
