@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Administrateur{% endblock %}
+
+{% block sidebar %}
+    <a href="{% url 'admin_dashboard' %}" class="flex items-center space-x-3 p-3 rounded-lg text-white bg-emerald-600 font-semibold shadow-md transition duration-150 ease-in-out">
+        <i class="fa-solid fa-gauge-high w-5 h-5"></i>
+        <span>Tableau de bord</span>
+    </a>
+    <a href="{% url 'list_doctors' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        <i class="fa-solid fa-user-doctor w-5 h-5"></i>
+        <span>Docteurs</span>
+    </a>
+    <a href="{% url 'list_patients' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        <i class="fa-solid fa-user-injured w-5 h-5"></i>
+        <span>Patients</span>
+    </a>
+    <a href="{% url 'admin_confirmed_appointments' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        <i class="fa-solid fa-calendar-check w-5 h-5"></i>
+        <span>Rendez-vous Confirmés</span>
+    </a>
+{% endblock %}
+
+{% block header %}Tableau de bord Administrateur{% endblock %}
+
+{% block content %}
+    <div class="max-w-full mx-auto">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-6">
+            <i class="fa-solid fa-hand-wave text-emerald-500 mr-2"></i> Bonjour, <strong class="text-emerald-600">{{ username }} </strong>!
+        </h1>
+        <!-- <p class="text-lg text-gray-600 mb-10 border-b pb-4">
+            Vous êtes connecté en tant qu’<strong class="text-emerald-600">Administrateur</strong>.
+        </p>
+        -->
+        <p class=" mb-10 border-b pb-4"></p>
+        <!-- Statistiques principales -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div class="stat-card bg-white p-6 rounded-2xl shadow-xl border-l-4 border-blue-500 hover:shadow-2xl transition duration-300 ease-in-out">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-sm font-medium text-blue-500 uppercase tracking-wider">Total Docteurs</div>
+                        <div class="text-4xl font-bold text-gray-900 mt-1">{{ total_doctors }}</div>
+                        <div class="text-xs text-gray-500 mt-2">Comptes actifs</div>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-full text-blue-600">
+                        <i class="fa-solid fa-user-doctor text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card bg-white p-6 rounded-2xl shadow-xl border-l-4 border-emerald-500 hover:shadow-2xl transition duration-300 ease-in-out">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-sm font-medium text-emerald-500 uppercase tracking-wider">Total Patients</div>
+                        <div class="text-4xl font-bold text-gray-900 mt-1">{{ total_patients }}</div>
+                        <div class="text-xs text-gray-500 mt-2">Comptes patients enregistrés</div>
+                    </div>
+                    <div class="p-3 bg-emerald-100 rounded-full text-emerald-600">
+                        <i class="fa-solid fa-user-injured text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card bg-white p-6 rounded-2xl shadow-xl border-l-4 border-purple-500 hover:shadow-2xl transition duration-300 ease-in-out">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-sm font-medium text-purple-500 uppercase tracking-wider">Rendez-vous aujourd'hui</div>
+                        <div class="text-4xl font-bold text-gray-900 mt-1">{{ appointments_today }}</div>
+                        <div class="text-xs text-gray-500 mt-2">Pour le {{ today }}</div>
+                    </div>
+                    <div class="p-3 bg-purple-100 rounded-full text-purple-600">
+                        <i class="fa-solid fa-calendar-day text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card bg-white p-6 rounded-2xl shadow-xl border-l-4 border-red-500 hover:shadow-2xl transition duration-300 ease-in-out">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-sm font-medium text-red-500 uppercase tracking-wider">Actions rapides</div>
+                        <a href="{% url 'admin_add_user' %}" class="block mt-3 bg-red-500 text-white px-4 py-2 rounded-xl font-semibold hover:bg-red-600 transition duration-150 ease-in-out shadow-lg">
+                            <i class="fa-solid fa-user-plus mr-2"></i> Ajouter utilisateur
+                        </a>
+                    </div>
+                    <div class="p-3 bg-red-100 rounded-full text-red-600">
+                        <i class="fa-solid fa-gear text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table des rendez-vous récents -->
+        <div class="mt-10 bg-white p-8 rounded-2xl shadow-xl">
+            <h2 class="text-2xl font-extrabold text-gray-800 mb-6 border-b pb-3 flex items-center">
+                <i class="fa-solid fa-clipboard-list text-emerald-500 mr-3"></i> Derniers rendez-vous
+            </h2>
+
+            {% if recent_appointments %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Docteur</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        {% for a in recent_appointments %}
+                        <tr class="hover:bg-emerald-50 transition duration-150 ease-in-out">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ a.id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.patient }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.doctor }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.date|date:"d/m/Y" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ a.time }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if a.status == 'Confirmed' %}bg-green-100 text-green-800{% elif a.status == 'Pending' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ a.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p class="text-gray-500 p-6 border border-dashed rounded-xl bg-gray-50 text-center shadow-inner">
+                    <i class="fa-solid fa-circle-info mr-2 text-xl text-gray-400"></i>
+                    Aucun rendez-vous récent.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+backend/hms_backend/venv/
+.env
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Angular
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+*.log

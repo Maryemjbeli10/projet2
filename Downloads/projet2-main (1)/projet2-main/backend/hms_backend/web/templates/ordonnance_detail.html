@@ -1,0 +1,117 @@
+{% if read_only %}
+  <div class="mb-4 p-3 bg-amber-100 text-amber-800 rounded-lg border border-amber-300">
+    <i class="fa-solid fa-lock mr-2"></i>
+    Cette ordonnance est <strong>verrouillée</strong> : lecture seule, aucune modification possible.
+  </div>
+{% endif %}
+{% extends 'base.html' %}
+
+{% block title %}Détails Ordonnance{% endblock %}
+
+{% block head %}
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
+
+{% block sidebar %}
+    <!-- Tableau de bord : normal -->
+    <a href="{% url 'doctor_dashboard' %}"
+       class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-gauge-high w-5 h-5"></i>
+        <span>Tableau de bord</span>
+    </a>
+
+    <a href="{% url 'list_patients' %}"
+       class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-user-injured w-5 h-5"></i>
+        <span>Mes Patients</span>
+    </a>
+
+    <a href="{% url 'doctor_weekly_schedule' %}" class="flex items-center space-x-3 p-3 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-calendar-week w-5 h-5"></i>
+        <span>Mon Planning</span>
+    </a>
+
+    <!-- Cette page : Créer Ordonnance en VERT -->
+    <a href="{% url 'create_ordonnance' %}"
+       class="flex items-center space-x-3 p-3 rounded-lg font-medium bg-emerald-600 text-white shadow-md transition">
+        <i class="fa-solid fa-file-medical w-5 h-5"></i>
+        <span>Créer Ordonnance</span>
+    </a>
+    <a href="{% url 'doctor_ordonnances' %}" class="flex items-center space-x-3 p-3 rounded-lg font-medium transition duration-150 ease-in-out
+          {% if request.resolver_match.url_name == 'doctor_ordonnances' %}
+            text-white bg-emerald-600 shadow-md
+          {% else %}
+            text-gray-700 hover:bg-gray-100
+          {% endif %}">
+      <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
+      <span>Mes Ordonnances</span>
+    </a>
+    <a href="{% url 'profile_info' %}"
+       class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+        <i class="fa-solid fa-user-gear w-5 h-5"></i>
+        <span>Mon Profil</span>
+    </a>
+{% endblock %}
+
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-10 p-8 bg-white shadow-xl rounded-xl border border-gray-100">
+
+    <!-- Titre -->
+    <h2 class="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-3">
+        <i class="fa-solid fa-file-medical text-indigo-600"></i>
+        Ordonnance pour {{ ordonnance.patient.full_name }}
+    </h2>
+
+    <!-- Informations générales -->
+    <div class="space-y-4 text-gray-700">
+
+        <div class="bg-gray-50 p-4 rounded-lg border">
+            <p class="font-semibold text-gray-800"><i class="fa-solid fa-user-doctor text-emerald-600 mr-2"></i>Docteur :</p>
+            <p class="pl-6">{{ ordonnance.doctor.full_name }}</p>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border">
+            <p class="font-semibold text-gray-800"><i class="fa-solid fa-calendar-day text-indigo-600 mr-2"></i>Date :</p>
+            <p class="pl-6">{{ ordonnance.date_created|date:"d/m/Y H:i" }}</p>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border">
+            <p class="font-semibold text-gray-800"><i class="fa-solid fa-stethoscope text-rose-600 mr-2"></i>Diagnostic / Motif :</p>
+            <p class="pl-6">{{ ordonnance.diagnostic|default:"-" }}</p>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border">
+            <p class="font-semibold text-gray-800"><i class="fa-solid fa-prescription text-blue-600 mr-2"></i>Prescription :</p>
+            <p class="pl-6 whitespace-pre-line">{{ ordonnance.prescription|default:"-" }}</p>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border">
+            <p class="font-semibold text-gray-800"><i class="fa-solid fa-notes-medical text-amber-600 mr-2"></i>Notes / Instructions :</p>
+            <p class="pl-6 whitespace-pre-line">{{ ordonnance.notes|default:"-" }}</p>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border">
+            <p class="font-semibold text-gray-800"><i class="fa-solid fa-triangle-exclamation text-red-600 mr-2"></i>Priorité :</p>
+            <p class="pl-6">{{ ordonnance.priority|default:"Normal" }}</p>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-8 flex items-center gap-4">
+        <a href="{% url 'ordonnance_pdf' ordonnance.id %}"
+           class="bg-indigo-600 text-white px-5 py-3 rounded-lg font-semibold shadow-md hover:bg-indigo-700 transition flex items-center gap-2">
+            <i class="fa-solid fa-download"></i>
+            Télécharger PDF
+        </a>
+
+        <a href="{% url 'doctor_dashboard' %}"
+           class="bg-gray-500 text-white px-5 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-600 transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i>
+            Retour au dashboard
+        </a>
+    </div>
+
+</div>
+{% endblock %}

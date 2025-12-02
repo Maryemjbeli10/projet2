@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Liste des Docteurs{% endblock %}
+
+{% block header %}Gestion des Docteurs{% endblock %}
+{% block sidebar %}
+    <a href="{% url 'admin_dashboard' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        <i class="fa-solid fa-gauge-high w-5 h-5"></i>
+        <span>Tableau de bord</span>
+    </a>
+    <a href="{% url 'list_doctors' %}" class="flex items-center space-x-3 p-3 rounded-lg text-white bg-emerald-600 font-semibold shadow-md transition duration-150 ease-in-out">
+        <i class="fa-solid fa-user-doctor w-5 h-5"></i>
+        <span>Docteurs</span>
+    </a>
+    <a href="{% url 'list_patients' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        <i class="fa-solid fa-user-injured w-5 h-5"></i>
+        <span>Patients</span>
+    </a>
+    <a href="{% url 'admin_confirmed_appointments' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        <i class="fa-solid fa-calendar-check w-5 h-5"></i>
+        <span>Rendez-vous Confirmés</span>
+    </a>
+{% endblock %}
+
+
+{% block content %}
+<div class="max-w-full mx-auto bg-white shadow-2xl rounded-3xl p-8 border border-gray-100">
+  <h1 class="text-3xl font-extrabold text-gray-800 mb-8 flex items-center border-b pb-4">
+    <i class="fa-solid fa-user-doctor text-blue-500 mr-3"></i> Liste des Docteurs
+  </h1>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-4 mb-4 text-sm rounded-lg
+        {% if message.tags == 'success' %}bg-green-100 text-green-800 border border-green-200
+        {% elif message.tags == 'error' %}bg-red-100 text-red-800 border border-red-200
+        {% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}" role="alert">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="mb-6 flex justify-end">
+    <a href="{% url 'admin_add_user' %}" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-xl transition duration-150 ease-in-out shadow-lg flex items-center space-x-2">
+        <i class="fa-solid fa-user-plus"></i>
+        <span>Ajouter un Docteur</span>
+    </a>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom d'utilisateur</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom complet</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spécialisation</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Adresse</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Années d'expérience</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-100">
+  {% for doctor in doctors %}
+  <tr id="row-{{ doctor.id }}" class="hover:bg-emerald-50 transition duration-150 ease-in-out">
+    <!-- username -->
+    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+      <span class="txt">{{ doctor.username }}</span>
+      <span class="inp hidden" data-name="username">{{ doctor.username }}</span>
+    </td>
+
+    <!-- full_name -->
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+      <span class="txt">{{ doctor.doctor_profile.full_name }}</span>
+      <span class="inp hidden" data-name="full_name">{{ doctor.doctor_profile.full_name }}</span>
+    </td>
+
+    <!-- email -->
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+      <span class="txt">{{ doctor.email }}</span>
+      <span class="inp hidden" data-name="email">{{ doctor.email }}</span>
+    </td>
+
+    <!-- specialization -->
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+      <span class="txt">{{ doctor.doctor_profile.specialization }}</span>
+      <span class="inp hidden" data-name="specialization">{{ doctor.doctor_profile.specialization }}</span>
+    </td>
+
+    <!-- phone -->
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+      <span class="txt">{{ doctor.doctor_profile.phone }}</span>
+      <span class="inp hidden" data-name="phone">{{ doctor.doctor_profile.phone }}</span>
+    </td>
+
+    <!-- address -->
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+      <span class="txt">{{ doctor.doctor_profile.address }}</span>
+      <span class="inp hidden" data-name="address">{{ doctor.doctor_profile.address }}</span>
+    </td>
+
+    <!-- experience_years -->
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+      <span class="txt">{{ doctor.doctor_profile.experience_years }} ans</span>
+      <span class="inp hidden" data-name="experience_years">{{ doctor.doctor_profile.experience_years }}</span>
+    </td>
+
+    <!-- description -->
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+      <span class="txt">{{ doctor.doctor_profile.description|default:"—" }}</span>
+      <span class="inp hidden" data-name="description">{{ doctor.doctor_profile.description|default:"" }}</span>
+    </td>
+
+    <!-- ACTIONS -->
+    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+      <form method="post" action="{% url 'edit_doctor_inline' doctor.doctor_profile.id %}" class="inline" onsubmit="fillHiddenFields(this, {{ doctor.id }})">
+        {% csrf_token %}
+
+        <!-- Champs cachés : remplis à la volée -->
+        <input type="hidden" name="username">
+        <input type="hidden" name="full_name">
+        <input type="hidden" name="email">
+        <input type="hidden" name="specialization">
+        <input type="hidden" name="phone">
+        <input type="hidden" name="address">
+        <input type="hidden" name="experience_years">
+        <input type="hidden" name="description">
+
+        <button type="button" class="edit-btn text-blue-600 hover:text-blue-900 mr-2" onclick="toggleEdit({{ doctor.id }})">
+          <i class="fa-solid fa-pen-to-square"></i> Modifier
+        </button>
+        <button type="submit" class="save-btn hidden text-green-600 hover:text-green-900 mr-2">
+          <i class="fa-solid fa-check"></i> Sauvegarder
+        </button>
+      </form>
+
+      <!-- SUPPRESSION -->
+      <form method="post" action="{% url 'delete_doctor_inline' doctor.doctor_profile.id %}" class="inline">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 hover:text-red-900 text-sm" onclick="return confirm('Voulez-vous vraiment supprimer ce docteur ?');">
+          <i class="fa-solid fa-trash"></i> Supprimer
+        </button>
+      </form>
+    </td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="9" class="text-center py-8 text-lg text-gray-500 bg-gray-50 rounded-b-xl">
+      <i class="fa-solid fa-circle-info mr-2 text-xl text-gray-400"></i>
+      Aucun docteur trouvé.
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
+    </table>
+  </div>
+
+  <div class="mt-8 text-right">
+    <a href="{% url 'admin_dashboard' %}" class="text-emerald-600 font-semibold hover:text-emerald-800 transition duration-150 ease-in-out flex items-center justify-end space-x-2">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Retour au tableau de bord</span>
+    </a>
+  </div>
+</div>
+
+<script>
+function toggleEdit(id) {
+  const row = document.getElementById('row-' + id);
+  row.querySelectorAll('.txt').forEach(el => el.classList.add('hidden'));
+  row.querySelectorAll('.inp').forEach(el => {
+    el.classList.remove('hidden');
+    const inp = document.createElement('input');
+    inp.type = el.dataset.name === 'experience_years' ? 'number' : 'text';
+    inp.value = el.textContent.trim();
+    el.innerHTML = '';
+    el.appendChild(inp);
+  });
+  row.querySelector('.edit-btn').classList.add('hidden');
+  row.querySelector('.save-btn').classList.remove('hidden');
+}
+
+function fillHiddenFields(form, id) {
+  const row = document.getElementById('row-' + id);
+  row.querySelectorAll('.inp input').forEach(inp => {
+    const field = form.querySelector('input[name="' + inp.parentElement.dataset.name + '"]');
+    if (field) field.value = inp.value;
+  });
+}
+</script>
+
+{% endblock %}
