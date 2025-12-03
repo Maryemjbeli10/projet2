@@ -598,3 +598,6 @@ class DoctorOrdonnanceListView(generics.ListAPIView):
             qs = qs.filter(priority=priority)
 
         return qs
+    
+
+    

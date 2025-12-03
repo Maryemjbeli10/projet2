@@ -2,8 +2,8 @@ from django.urls import path
 from . import views, api_views
 
 urlpatterns = [
-    path('', views.homepage, name='home'),
 
+    path('', views.homepage, name='home'),
     # Auth
     path('login/', views.login_page, name='login'),
     path('register/', views.register_page, name='register'),
@@ -32,6 +32,15 @@ urlpatterns = [
     path('doctor/ordonnances/<int:ordonnance_id>/', views.ordonnance_detail_view, name='ordonnance_detail'),
     path('doctor/ordonnances/<int:ordonnance_id>/pdf/', views.ordonnance_pdf_view, name='ordonnance_pdf'),
     path('patient/ordonnances/', views.patient_ordonnances_page, name='patient_ordonnances'),
+# Certificats patient
+    # path('patient/certificats/', views.patient_certificats_page, name='patient_certificats'),
+    # path('patient/certificat/<int:certificat_id>/pdf/', views.patient_certificat_pdf_view, name='patient_certificat_pdf'),
+    # path("patient/certificat/<int:id>/pdf/", views.certificat_pdf_view, name="certificat_pdf"),
+    path('patient/certificats/', views.patient_certificats_page, name='patient_certificats_page'),
+
+    # Télécharger un certificat en PDF
+    path('patient/certificat/<int:certificat_id>/pdf/', views.patient_certificat_pdf_view, name='patient_certificat_pdf'),
+
     path('patient/ordonnances/<int:ordonnance_id>/pdf/', views.patient_ordonnance_pdf_view, name='patient_ordonnance_pdf'),
     path('doctor/finished-patients/', views.doctor_finished_patients_view, name='doctor_finished_patients'),
     path('doctor/weekly-schedule/', views.doctor_weekly_schedule_view, name='doctor_weekly_schedule'),
@@ -42,8 +51,5 @@ urlpatterns = [
     path('doctor/certificats/create/from-appointment/<int:appointment_id>/', views.create_certificat_from_appointment_view, name='create_certificat_from_appointment'),
     path('doctor/certificats/', views.doctor_certificats_view, name='doctor_certificats'),
     path('doctor/certificats/<int:certificat_id>/pdf/', views.certificat_pdf_view, name='certificat_pdf'),
-
-
-
 
 ]

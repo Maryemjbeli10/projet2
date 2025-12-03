@@ -700,6 +700,96 @@ def patient_ordonnance_pdf_view(request, ordonnance_id):
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="ordonnance_{ordonnance.id}.pdf"'
     return response
+def patient_certificats_page(request):
+    username = request.session.get("username")
+    if not username:
+        messages.error(request, "Veuillez vous connecter.")
+        return redirect("login")
+
+    try:
+        user = User.objects.get(username=username)
+        patient = Patient.objects.get(user=user)
+    except (User.DoesNotExist, Patient.DoesNotExist):
+        messages.error(request, "Profil patient introuvable.")
+        return redirect("login")
+
+    doctors = Doctor.objects.filter(
+        certificats__patient=patient
+    ).distinct().order_by("full_name")
+
+    specializations = Doctor.objects.filter(
+        certificats__patient=patient
+    ).values_list("specialization", flat=True).distinct().order_by("specialization")
+
+    certificat_dates = Certificat.objects.filter(
+        patient=patient
+    ).dates('date_created', 'day', order='DESC')
+
+    # Récupérer les filtres du template
+    doctor_id = request.GET.get("doctor")
+    specialization = request.GET.get("specialization")
+    date_certif = request.GET.get("date_certif")
+
+    qs = Certificat.objects.filter(patient=patient).order_by('-date_created')
+
+    if doctor_id:
+        qs = qs.filter(doctor_id=doctor_id)
+    if specialization:
+        qs = qs.filter(doctor__specialization=specialization)
+    if date_certif:
+        qs = qs.filter(date_created__date=date_certif)
+
+    return render(request, 'patient_certificats.html', {
+        'certificats': qs,
+        'doctors': doctors,
+        'specializations': specializations,
+        'certificat_dates': certificat_dates,
+        'doctor_id': doctor_id,
+        'specialization_selected': specialization,
+        'date_certif': date_certif,
+    })
+
+
+def patient_certificat_pdf_view(request, certificat_id):
+    # 🔹 Récupérer le certificat
+    certificat = get_object_or_404(Certificat, id=certificat_id)
+
+    # 🔹 Vérifier le patient connecté
+    username = request.session.get("username")
+    if not username:
+        return HttpResponse("Veuillez vous connecter.")
+    
+    try:
+        user = User.objects.get(username=username)
+        patient = Patient.objects.get(user=user)
+    except (User.DoesNotExist, Patient.DoesNotExist):
+        return HttpResponse("Profil patient introuvable.")
+
+    # 🔹 Vérifier que le certificat appartient au patient
+    if certificat.patient != patient:
+        return HttpResponse("Accès refusé à ce certificat.")
+
+    # 🔹 Génération du PDF
+    logo_abs_path = os.path.abspath(
+        os.path.join(settings.BASE_DIR, "web", "static", "images", "logo.png")
+    ).replace("\\", "/")
+    logo_path = f"file:///{logo_abs_path}"
+
+    html = render_to_string("certificat_pdf.html", {"certificat": certificat, "logo_path": logo_path})
+
+    path_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+
+    options = {
+        'encoding': 'UTF-8',
+        'enable-local-file-access': None,
+    }
+
+    pdf = pdfkit.from_string(html, False, configuration=config, options=options)
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="certificat_{certificat.id}.pdf"'
+    return response
 
 def generate_pdf(request, id):
     ordonnance = Ordonnance.objects.get(id=id)
@@ -956,10 +1046,36 @@ def create_certificat_from_appointment_view(request, appointment_id):
 
 
 def doctor_certificats_view(request):
-    doctor = Doctor.objects.get(user__username=request.session["username"])
-    certificats = Certificat.objects.filter(doctor=doctor).select_related('patient')
-    return render(request, "doctor_certificats_list.html", {"certificats": certificats})
+    role = request.session.get("role")
+    access_token = request.session.get("access_token")
 
+    if role != "doctor" or not access_token:
+        messages.error(request, "Accès refusé.")
+        return redirect("login")
+
+    doctor = Doctor.objects.get(user__username=request.session["username"])
+
+    # --- Filtres ---
+    search = request.GET.get("search", "").strip()
+    date_cert = request.GET.get("date_cert", "")
+
+    qs = Certificat.objects.filter(doctor=doctor).select_related('patient').order_by('-date_created')
+
+    if search:
+        qs = qs.filter(patient__full_name__icontains=search)
+
+    if date_cert:
+        qs = qs.filter(date_created__date=date_cert)
+
+    # Liste des dates disponibles pour le filtre
+    certificat_dates = qs.dates('date_created', 'day', order='DESC')
+
+    return render(request, "doctor_certificats_list.html", {
+        "certificats": qs,
+        "certificat_dates": certificat_dates,
+        "search": search,
+        "date_cert": date_cert,
+    })
 
 def certificat_pdf_view(request, certificat_id):
     certificat = get_object_or_404(Certificat, id=certificat_id, doctor__user__username=request.session["username"])

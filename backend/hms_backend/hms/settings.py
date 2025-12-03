@@ -85,15 +85,24 @@ WSGI_APPLICATION = 'hms.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'HospitalManagment',       # le nom de ta base PostgreSQL
-        'USER': 'postgres',          # l'utilisateur par défaut de PostgreSQL
-        'PASSWORD': 'siwar123',  # ton mot de passe PostgreSQL
-        'HOST': 'localhost',         # ou l’adresse du serveur PostgreSQL
-            
-    }
-}
+
+  'default': {
+
+    'ENGINE': 'django.db.backends.postgresql',
+
+    'NAME': 'HospitalManagment',   # le nom de ta base PostgreSQL
+
+    'USER': 'postgres',     # l'utilisateur par défaut de PostgreSQL
+
+    'PASSWORD': 'adminsyrine', # ton mot de passe PostgreSQL
+
+    'HOST': 'localhost',    # ou l’adresse du serveur PostgreSQL
+
+    'PORT': '5432',       # le port par défaut de PostgreSQL
+
+  }
+
+}  
 
 
 

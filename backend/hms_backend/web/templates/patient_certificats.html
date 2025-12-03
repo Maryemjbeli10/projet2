@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Certificats{% endblock %}
+
+{% block sidebar %}
+<a href="{% url 'patient_dashboard' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+    <i class="fa-solid fa-gauge-high w-5 h-5"></i>
+    <span>Tableau de bord</span>
+</a>
+<a href="{% url 'patient_history' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        <i class="fa-solid fa-clock w-5 h-5"></i>
+        <span>Historique</span>
+</a>
+<div x-data="{ open: false }" class="w-full">
+    <button @click="open = !open"
+        class="w-full flex items-center justify-between p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-file-medical w-5 h-5"></i>
+            <span>Mes Documents</span>
+        </div>
+
+        <i :class="open ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'" class="text-gray-500"></i>
+    </button>
+
+    <!-- Sous-menu -->
+    <div x-show="open" x-transition class="ml-10 mt-2 space-y-2">
+
+        <a href="{% url 'patient_ordonnances' %}"
+           class="block p-2 text-gray-600 hover:text-emerald-600 transition">
+            • Mes Ordonnances
+        </a>
+
+        <a href="{% url 'patient_certificats_page' %}"
+           class="block p-2 text-gray-600 hover:text-emerald-600 transition">
+            • Mes Certificats
+        </a> 
+
+    </div>
+</div>
+<a href="{% url 'profile_info' %}" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+    <i class="fa-solid fa-user-gear w-5 h-5"></i>
+    <span>Mon Profil</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-extrabold text-gray-800 mb-8 flex items-center">
+        <i class="fa-solid fa-file-medical text-emerald-500 mr-3"></i>
+        Mes Certificats
+    </h1>
+
+    <!-- FILTRES -->
+    <form method="get" class="flex flex-wrap gap-4 mb-6">
+        <select name="doctor" class="border border-gray-300 rounded-lg px-3 py-2">
+            <option value="">-- Tous les docteurs --</option>
+            {% for d in doctors %}
+            <option value="{{ d.id }}" {% if doctor_id == d.id|stringformat:"s" %}selected{% endif %}>
+                {{ d.full_name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <select name="specialization" class="border border-gray-300 rounded-lg px-3 py-2">
+            <option value="">-- Toutes spécialisations --</option>
+            {% for spec in specializations %}
+            <option value="{{ spec }}" {% if specialization_selected == spec %}selected{% endif %}>
+                {{ spec }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <select name="date_certif" class="border border-gray-300 rounded-lg px-3 py-2">
+            <option value="">-- Toutes dates --</option>
+            {% for d in certificat_dates %}
+                <option value="{{ d|date:'Y-m-d' }}" {% if date_certif == d|date:'Y-m-d' %}selected{% endif %}>
+                    {{ d|date:"d/m/Y" }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition">
+            <i class="fa-solid fa-filter mr-2"></i> Filtrer
+        </button>
+        <a href="{% url 'patient_certificats_page' %}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
+            Réinitialiser
+        </a>
+    </form>
+
+    {% if certificats %}
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {% for cert in certificats %}
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-sm font-semibold text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full">
+                        #{{ cert.id }}
+                    </span>
+                    <span class="text-xs text-gray-500">{{ cert.date_created|date:"d/m/Y" }}</span>
+                </div>
+
+                <h3 class="text-lg font-bold text-gray-900 mb-1">{{ cert.doctor.full_name }}</h3>
+                <p class="text-sm text-gray-600 mb-4">{{ cert.doctor.specialization|default:"" }}</p>
+
+                <div class="space-y-2 text-sm text-gray-700">
+                    <p>{{ cert.content|truncatewords:15|default:"-" }}</p>
+                </div>
+
+                <div class="mt-4 flex items-center justify-between">
+                    <a href="{% url 'patient_certificat_pdf' cert.id %}"
+                       class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">
+                        <i class="fa-solid fa-download mr-2"></i> Télécharger PDF
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-12">
+            <i class="fa-solid fa-file-medical text-5xl text-gray-300 mb-4"></i>
+            <h2 class="text-xl font-semibold text-gray-700">Aucun certificat disponible</h2>
+            <p class="text-gray-500 mt-2">Vos certificats apparaîtront ici après consultation.</p>
+        </div>
+    {% endif %}
+
+    <div class="mt-10 text-center">
+        <a href="{% url 'patient_dashboard' %}"
+           class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Retour au tableau de bord
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -11,10 +11,33 @@
         <i class="fa-solid fa-clock w-5 h-5"></i>
         <span>Historique</span>
 </a>
-<a href="{% url 'patient_ordonnances' %}" class="flex items-center space-x-3 p-3 rounded-lg text-white bg-emerald-600 font-semibold shadow-md transition">
-    <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
-    <span>Mes Prescriptions</span>
-</a>
+<div x-data="{ open: false }" class="w-full">
+    <button @click="open = !open"
+        class="w-full flex items-center justify-between p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out">
+        
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-prescription-bottle-medical w-5 h-5"></i>
+            <span>Mes Prescriptions</span>
+        </div>
+
+        <i :class="open ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'" class="text-gray-500"></i>
+    </button>
+
+    <!-- Sous-menu -->
+    <div x-show="open" x-transition class="ml-10 mt-2 space-y-2">
+
+        <a href="{% url 'patient_ordonnances' %}"
+           class="block p-2 text-gray-600 hover:text-emerald-600 transition">
+            • Mes Ordonnances
+        </a>
+
+        <a href="{% url 'patient_certificats_page' %}"
+           class="block p-2 text-gray-600 hover:text-emerald-600 transition">
+            • Mes Certificats
+        </a> 
+
+    </div>
+</div>
 <!--<a href="#doctors-list" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
     <i class="fa-solid fa-user-doctor w-5 h-5"></i>
     <span>Docteurs</span>
